@@ -5,7 +5,9 @@
   "private": true,
   "scripts": {
     "build": "node 构建单文件版.js",
-    "check": "node 检查章节范围.js"
+    "check": "node 检查章节范围.js",
+    "sync:android": "node 构建单文件版.js && node -e \"require('fs').copyFileSync('高数学习工具.html','www/index.html')\" && npx cap sync android",
+    "apk:debug": "cd android && gradlew assembleDebug"
   },
   "keywords": [
     "高数",
@@ -15,5 +17,10 @@
     "学习工具",
     "katex"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/core": "^8.6.0"
+  }
 }

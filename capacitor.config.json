@@ -1,0 +1,9 @@
+{
+  "appId": "com.yucua.gaoshu",
+  "appName": "高数学习工具",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}
