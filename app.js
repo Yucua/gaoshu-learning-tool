@@ -161,6 +161,13 @@
     h += card('data-tool="speed"', '⚡', '考前速记', '全书没掌握的知识点 + 错题 + 公式 + 易错，一页 A4', ['可打印']);
     h += card('data-tool="formula"', '📐', '公式手册', '全书公式，可复制、可打印', [fnN+' 张']);
     h += '</div>';
+
+    h += '<div class="dash-h"><h2>数据</h2><span class="muted">进度只存在本机 · 换设备前先导出</span></div>';
+    h += '<div class="card" style="padding:14px 16px"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">'+
+         '<button class="btn primary" data-export>⬇ 导出进度</button>'+
+         '<button class="btn" data-import>⬆ 导入进度</button>'+
+         '<span class="muted" style="flex:1 1 100%;margin-top:2px">导出会下载一个 JSON 文件；换设备后用它「导入」即可恢复错题和掌握度。</span></div></div>';
+    h += '<input type="file" id="importFile" accept=".json,application/json" style="display:none">';
     return h;
   }
 
@@ -809,6 +816,46 @@
 
     if(t.closest("[data-print]")){ window.print(); return; }
     if(t.closest("#toTop")){ window.scrollTo({top:0,behavior:"smooth"}); return; }
+
+    /* 导出进度 */
+    var exBtn = t.closest("[data-export]");
+    if(exBtn){
+      var data = { app:"gaoshu", version:1, exportedAt:new Date().toISOString(), check:sget(LS_CHECK), wrong:sget(LS_WRONG) };
+      var blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "高数进度-" + (new Date().toISOString().slice(0,10)) + ".json";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1500);
+      exBtn.textContent = "已导出"; setTimeout(function(){ exBtn.textContent = "⬇ 导出进度"; }, 1500);
+      return;
+    }
+
+    /* 导入进度 */
+    var imBtn = t.closest("[data-import]");
+    if(imBtn){
+      var fi = document.getElementById("importFile");
+      if(!fi) return;
+      fi.onchange = function(){
+        var file = fi.files && fi.files[0];
+        if(!file){ return; }
+        var rd = new FileReader();
+        rd.onload = function(){
+          try {
+            var d = JSON.parse(rd.result);
+            if(!d || d.app !== "gaoshu"){ alert("这不是高数工具的进度文件，请确认选对了。"); return; }
+            var n = 0;
+            if(d.check != null){ sset(LS_CHECK, String(d.check)); checks = JSON.parse(d.check||"{}"); n++; }
+            if(d.wrong != null){ sset(LS_WRONG, String(d.wrong)); wrong = JSON.parse(d.wrong||"{}"); n++; }
+            alert("导入成功（恢复了 " + n + " 类数据）。"); render(); window.scrollTo(0,0);
+          } catch(e){ alert("导入失败：文件格式不对。" + e.message); }
+        };
+        rd.readAsText(file);
+        fi.value = "";
+      };
+      fi.click();
+      return;
+    }
   });
 
   document.addEventListener("keydown", function(ev){
