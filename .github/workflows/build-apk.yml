@@ -30,6 +30,7 @@ jobs:
       - name: 生成单文件版并同步到 android
         run: |
           node 构建单文件版.js
+          mkdir -p www
           node -e "require('fs').copyFileSync('高数学习工具.html','www/index.html')"
           npx cap sync android
 
