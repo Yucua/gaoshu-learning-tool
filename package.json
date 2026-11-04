@@ -1,0 +1,19 @@
+{
+  "name": "gaoshu-learning-tool",
+  "version": "1.0.0",
+  "description": "同济八版高等数学自学工具（上+下册 12 章 81 节），纯前端零依赖",
+  "private": true,
+  "scripts": {
+    "build": "node 构建单文件版.js",
+    "check": "node 检查章节范围.js"
+  },
+  "keywords": [
+    "高数",
+    "高等数学",
+    "同济",
+    "数学",
+    "学习工具",
+    "katex"
+  ],
+  "license": "MIT"
+}
