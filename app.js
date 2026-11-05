@@ -531,7 +531,7 @@
     EDGES.forEach(function(e,ei){
       var xb = 240 + ei*5;  /* 每条线一个 x 通道，避免叠在一起 */
       var p = BOX_X + BOX_W + ',' + yc[e[0]] + ' ' + xb + ',' + yc[e[0]] + ' ' + xb + ',' + yc[e[1]] + ' ' + (BOX_X+BOX_W) + ',' + yc[e[1]];
-      h += '<polyline data-from="'+e[0]+'" data-to="'+e[1]+'" points="'+p+'"/>';
+      h += '<polyline data-from="'+e[0]+'" data-to="'+e[1]+'" points="'+p+'" fill="none"/>';
     });
     MAP.forEach(function(m,i){
       var st = chapStat(m.id);
@@ -898,7 +898,7 @@
     /* 知识地图：悬停高亮关联边 + 点击跳章 */
     var map = root.querySelector('#kmap');
     if(map){
-      var lines = map.querySelectorAll('line');
+      var lines = map.querySelectorAll('polyline');
       var nodes = map.querySelectorAll('.mnode');
       nodes.forEach(function(node){
         node.addEventListener('mouseover', function(){
