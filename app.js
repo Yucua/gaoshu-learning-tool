@@ -364,64 +364,52 @@
     return h;
   }
 
-  /* ===================== 工具：考前速记 ===================== */
+  /* ===================== 工具：考前速记（按章收纳，可折叠） ===================== */
   function toolSpeed(){
     var h='<div class="card">'+
-      '<div class="zone" style="margin-top:12px"><h2>考前速记 <span class="muted">全书 · 自动聚合</span></h2>'+
-      '<div class="muted">= 全书没掌握的知识点 + 错题 + 全部公式 + 易错点，按章分段</div>'+
-      '<div style="margin:12px 0"><button class="btn primary" data-print>打印这一页（A4）</button></div>';
+      '<div class="zone" style="margin-top:12px"><h2>考前速记 <span class="muted">全书 · 按章收纳</span></h2>'+
+      '<div class="muted">每章一个折叠块：没掌握知识点 + 错题 + 公式 + 易错点，点开哪章看哪章</div>'+
+      '<div style="margin:12px 0;display:flex;gap:8px;flex-wrap:wrap">'+
+      '<button class="btn" data-speedall>全部展开</button>'+
+      '<button class="btn" data-speednone>全部收起</button>'+
+      '<button class="btn primary" data-print>打印（自动展开全部）</button></div>';
 
-    h += '<h3 style="font-size:14px;margin:16px 0 6px">① 还没掌握的知识点</h3>';
-    var anyK=false;
+    var chapBlocks=[], firstNo = chaps()[0] ? chaps()[0].no : null;
     chaps().forEach(function(c){
-      var first=true;
+      var kH='',kN=0, wH='',wN=0, fH='',fN=0, pH='',pN=0;
       (c.sections||[]).forEach(function(s,si){
+        /* ① 没掌握的知识点 */
         var items=(s.checklist||[]).filter(function(it){var v=checks[ckKey(c.no,si,it.id)];return v===0||v===1;});
-        if(!items.length) return;
-        if(first){ h+='<div style="margin:14px 0 4px;font-size:12px;color:var(--accent);font-weight:700">第'+c.no+'章 '+esc(c.title)+'</div>'; first=false; }
-        anyK=true;
-        h+='<div class="muted" style="margin:8px 0 4px"><b>'+s.idx+' '+esc(s.title)+'</b></div>';
-        items.forEach(function(it){ h+='<div class="note-item"><div class="ni-b">'+md(it.knowledge||it.title)+'</div></div>'; });
-      });
-    });
-    if(!anyK) h+='<div class="muted">（还没有标记"半懂 / 没懂"的知识点）</div>';
-
-    h += '<h3 style="font-size:14px;margin:16px 0 6px">② 错题</h3>';
-    var anyW=false;
-    chaps().forEach(function(c){
-      var first=true;
-      (c.sections||[]).forEach(function(s,si){
+        if(items.length){ kN+=items.length; kH+='<div class="muted" style="margin:8px 0 4px"><b>'+s.idx+' '+esc(s.title)+'</b></div>';
+          items.forEach(function(it){ kH+='<div class="note-item"><div class="ni-b">'+md(it.knowledge||it.title)+'</div></div>'; }); }
+        /* ② 错题 */
         (s.problems||[]).forEach(function(p,pi){
           if(!wrong[wKey(c.no,si,pi)]) return;
-          if(first){ h+='<div style="margin:14px 0 4px;font-size:12px;color:var(--accent);font-weight:700">第'+c.no+'章 '+esc(c.title)+'</div>'; first=false; }
-          anyW=true;
-          h+='<div class="note-item"><div class="ni-h">'+s.idx+' · '+esc(p.kpt||"")+'</div><div class="ni-b">'+md(p.stem)+'</div>'+
-             (p.tip?'<div class="muted" style="margin-top:4px">'+md(p.tip)+'</div>':'')+'</div>';
+          wN++; wH+='<div class="note-item"><div class="ni-h">'+s.idx+' · '+esc(p.kpt||"")+'</div><div class="ni-b">'+md(p.stem)+'</div>'+
+            (p.tip?'<div class="muted" style="margin-top:4px">'+md(p.tip)+'</div>':'')+'</div>';
         });
-      });
-    });
-    if(!anyW) h+='<div class="muted">（还没有错题）</div>';
-
-    h += '<h3 style="font-size:14px;margin:16px 0 6px">③ 全书公式</h3>';
-    chaps().forEach(function(c){
-      h+='<div style="margin:14px 0 4px;font-size:12px;color:var(--accent);font-weight:700">第'+c.no+'章 '+esc(c.title)+'</div>';
-      (c.sections||[]).forEach(function(s){
+        /* ③ 公式 */
         (s.formulas||[]).forEach(function(f){
-          h+='<div class="note-item"><div class="ni-h">'+s.idx+' '+esc(s.title)+'</div><div class="latex">$$'+esc(f.latex||"")+'$$</div></div>';
+          fN++; fH+='<div class="note-item"><div class="ni-h">'+s.idx+' '+esc(s.title)+'</div><div class="latex">$$'+esc(f.latex||"")+'$$</div></div>';
         });
-      });
-    });
-
-    h += '<h3 style="font-size:14px;margin:16px 0 6px">④ 全书易错点</h3>';
-    chaps().forEach(function(c){
-      h+='<div style="margin:14px 0 4px;font-size:12px;color:var(--accent);font-weight:700">第'+c.no+'章 '+esc(c.title)+'</div>';
-      (c.sections||[]).forEach(function(s){
+        /* ④ 易错点 */
         (s.explain||[]).forEach(function(b){
           if(!b.pitfall) return;
-          h+='<div class="note-item"><div class="ni-h">'+s.idx+' '+esc(s.title)+'</div><div class="ni-b">'+md(b.pitfall)+'</div></div>';
+          pN++; pH+='<div class="note-item"><div class="ni-h">'+s.idx+' '+esc(s.title)+'</div><div class="ni-b">'+md(b.pitfall)+'</div></div>';
         });
       });
+      if(!(kN||wN||fN||pN)) return; /* 全书公式/易错点按章恒有，此兜底仅防全空章 */
+      var parts=[kN?'知识点 '+kN:'', wN?'错题 '+wN:'', fN?'公式 '+fN:'', pN?'易错 '+pN:''].filter(Boolean).join(' · ');
+      var open=(c.no===firstNo)?' open':'';
+      chapBlocks.push(c.no);
+      h+='<details class="spd-ch"'+open+'><summary>第'+c.no+'章 '+esc(c.title)+'<span class="spd-tags">'+parts+'</span></summary>'+
+        (kN?'<h3 style="font-size:13px;margin:10px 0 4px">📌 还没掌握</h3>'+kH:'')+
+        (wN?'<h3 style="font-size:13px;margin:10px 0 4px">📕 错题</h3>'+wH:'')+
+        (fN?'<h3 style="font-size:13px;margin:10px 0 4px">✏️ 公式</h3>'+fH:'')+
+        (pN?'<h3 style="font-size:13px;margin:10px 0 4px">⚠️ 易错点</h3>'+pH:'')+
+        '</details>';
     });
+    if(!chapBlocks.length) h+='<div class="muted">（暂无内容）</div>';
     h += '</div>';
     return h;
   }
@@ -1068,7 +1056,14 @@
       return;
     }
 
-    if(t.closest("[data-print]")){ window.print(); return; }
+    if(t.closest("[data-speedall]")){ document.querySelectorAll('.spd-ch').forEach(function(d){d.open=true;}); return; }
+    if(t.closest("[data-speednone]")){ document.querySelectorAll('.spd-ch').forEach(function(d){d.open=false;}); return; }
+    if(t.closest("[data-print]")){
+      /* 打印前把速记的各章全部展开，避免只打出第一页 */
+      document.querySelectorAll('.spd-ch').forEach(function(d){d.open=true;});
+      setTimeout(function(){ window.print(); }, 60);
+      return;
+    }
     if(t.closest("#toTop")){ window.scrollTo({top:0,behavior:"smooth"}); return; }
 
     /* 导出进度 */

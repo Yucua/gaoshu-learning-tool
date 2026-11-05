@@ -256,6 +256,14 @@ p{margin:var(--sp2) 0;max-width:var(--measure);}
 .tip{padding:8px 11px;font-size:12.5px;line-height:1.6;}
 .step-chain{padding:10px 13px;margin:10px 0;font-size:13.5px;border-radius:10px;}
 
+/* ---- 考前速记：按章收纳折叠块 ---- */
+.spd-ch{border:1px solid var(--line);border-radius:11px;background:var(--paper);margin:10px 0;overflow:hidden;}
+.spd-ch summary{cursor:pointer;list-style:none;padding:11px 14px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.spd-ch summary::-webkit-details-marker{display:none;}
+.spd-ch[open] summary{border-bottom:1px solid var(--line);}
+.spd-ch .spd-tags{font-size:11px;font-weight:400;color:var(--ink-3);background:var(--line);border-radius:999px;padding:2px 9px;}
+.spd-ch .note-item{box-shadow:none;margin:8px 14px;border:1px solid var(--line);}
+
 /* ---- 清单 / 按钮 / 标签：密度收紧 ---- */
 .checklist{gap:6px;}
 .ck{padding:9px 12px;border-radius:9px;}
@@ -393,6 +401,9 @@ p{margin:var(--sp2) 0;max-width:var(--measure);}
   .sidebar,.toTop,.tabbar,.prow,.btn,.search-wrap,.bars{display:none!important;}
   body{background:#fff;}
   .card,.note-item{box-shadow:none;}
+  .spd-ch{border:none;border-bottom:1px solid var(--line);margin:0 0 10px;}
+  .spd-ch summary{border:none;padding:6px 0;}
+  .spd-ch .note-item{border:none;margin:6px 0;}
 }
 </style>
 </head>
@@ -423,20 +434,20 @@ window.addEventListener("error", function(e){
     <div class="search-foot">↑ ↓ 选择 · Enter 打开 · Esc 关闭</div>
   </div>
 </div>
-<script src="glossary.js?v=9"></script>
-<script src="pinyin.js?v=9"></script>
-<script src="chapters/ch1.js?v=9"></script>
-<script src="chapters/ch2.js?v=9"></script>
-<script src="chapters/ch3.js?v=9"></script>
-<script src="chapters/ch4.js?v=9"></script>
-<script src="chapters/ch5.js?v=9"></script>
-<script src="chapters/ch6.js?v=9"></script>
-<script src="chapters/ch7.js?v=9"></script>
-<script src="chapters/ch8.js?v=9"></script>
-<script src="chapters/ch9.js?v=9"></script>
-<script src="chapters/ch10.js?v=9"></script>
-<script src="chapters/ch11.js?v=9"></script>
-<script src="chapters/ch12.js?v=9"></script>
-<script src="app.js?v=9"></script>
+<script src="glossary.js?v=10"></script>
+<script src="pinyin.js?v=10"></script>
+<script src="chapters/ch1.js?v=10"></script>
+<script src="chapters/ch2.js?v=10"></script>
+<script src="chapters/ch3.js?v=10"></script>
+<script src="chapters/ch4.js?v=10"></script>
+<script src="chapters/ch5.js?v=10"></script>
+<script src="chapters/ch6.js?v=10"></script>
+<script src="chapters/ch7.js?v=10"></script>
+<script src="chapters/ch8.js?v=10"></script>
+<script src="chapters/ch9.js?v=10"></script>
+<script src="chapters/ch10.js?v=10"></script>
+<script src="chapters/ch11.js?v=10"></script>
+<script src="chapters/ch12.js?v=10"></script>
+<script src="app.js?v=10"></script>
 </body>
 </html>
