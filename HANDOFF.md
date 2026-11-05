@@ -41,9 +41,10 @@ gaoshu/
 ## 三、关键约定与红线
 - **缓存版本**：`index.html` 里所有 `?v=N` 统一为当前 `v28`。改动任何前端文件后**必须升版**并同步到所有 15 个引用行。
 - **构建确定性**：`node 构建单文件版.js` 输出字节级可重复（`test_metrics.py` 风格验证过）。
-- **APK 出包**：只走 `android-app/build.sh`（`bash android-app/build.sh 4 1.3`），KSPASS 从环境变量读。签名 alias `c100`，密钥密码本机私有。
+- **APK 出包**：只走 `android-app/build.sh`（`bash android-app/build.sh 5 1.4`），KSPASS 从环境变量读。签名 alias `c100`，密钥密码本机私有。**当前已出到 versionCode 5 / v1.4**。
 - **APK 壳特性**：
   - 加载**在线地址**（`HOME_URL`），联网即用，改内容不需重装 App。
+  - 加载前 `web.clearCache(true)`：强制重抓线上最新 index.html，避免手机 WebView 缓存旧版顶不掉（**只清 HTTP 缓存，不动 localStorage，学习进度/错题本/同步码数据不受影响**）。2026-11-05 v1.4 加入，解决「线上已发新版但手机看不到」。
   - JS 桥 `AndroidTheme.setBarColor(color)` 传当前主题 `--bg` 实际色值，原生按亮度决定浅色/深色状态栏图标 → 系统栏跟随主题。
   - 桌面图标：数学 lim + 右箭头（`res/drawable/icon.png`，192×192 RGB 满铺）。
 - **签名密钥**：与「一百件小事」同源（`c100-release.jks`），`versionCode` 保持递增即可覆盖升级。
