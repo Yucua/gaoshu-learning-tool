@@ -15,6 +15,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebResourceRequest;
+import android.webkit.JavascriptInterface;
 import android.widget.FrameLayout;
 
 public class MainActivity extends Activity {
@@ -27,6 +28,57 @@ public class MainActivity extends Activity {
             + "Chrome/126.0.0.0 Mobile Safari/537.36";
 
     private WebView web;
+    private FrameLayout root;
+
+    // 与网页端 --bg 保持一致
+    private static final int BG_LIGHT = Color.parseColor("#F7F3EA");
+    private static final int BG_DARK  = Color.parseColor("#191815");
+
+    /** 网页把当前主题的背景色传进来，系统栏跟着变（以后加新配色不用再改 APK） */
+    private class ThemeBridge {
+        @JavascriptInterface
+        public void setBarColor(final String color) {
+            if (color == null) return;
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try { applySystemBarColor(Color.parseColor(color.trim())); } catch (Exception ignored) {}
+                }
+            });
+        }
+
+        /** 兼容 v1.1 旧接口 */
+        @JavascriptInterface
+        public void setTheme(final String theme) {
+            setBarColor("dark".equals(theme) ? "#191815" : "#F7F3EA");
+        }
+    }
+
+    private void applySystemBarColor(int bg) {
+        if (root != null) root.setBackgroundColor(bg);
+        if (web != null) web.setBackgroundColor(bg);
+        getWindow().setStatusBarColor(bg);
+        getWindow().setNavigationBarColor(bg);
+
+        // 按背景亮度自动决定图标用深色还是浅色（0.299R+0.587G+0.114B）
+        int y = (int) (0.299 * Color.red(bg) + 0.587 * Color.green(bg) + 0.114 * Color.blue(bg));
+        boolean lightIcons = y < 140;   // 背景深 → 图标用浅色
+
+        if (Build.VERSION.SDK_INT >= 30) {
+            android.view.WindowInsetsController c = getWindow().getInsetsController();
+            if (c != null) {
+                int light = android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                          | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+                c.setSystemBarsAppearance(lightIcons ? 0 : light, light);
+            }
+        } else {
+            View v = getWindow().getDecorView();
+            int flags = v.getSystemUiVisibility();
+            if (lightIcons) flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            else flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            v.setSystemUiVisibility(flags);
+        }
+    }
 
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     @Override
@@ -35,6 +87,7 @@ public class MainActivity extends Activity {
 
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(Color.parseColor("#F7F3EA"));
+        this.root = root;
 
         // Android 15（targetSdk 35）强制边到边，手动让出系统栏高度
         if (Build.VERSION.SDK_INT >= 30) {
@@ -74,6 +127,7 @@ public class MainActivity extends Activity {
         s.setUseWideViewPort(true);
         s.setLoadWithOverviewMode(false);
         s.setUserAgentString(UA);
+        web.addJavascriptInterface(new ThemeBridge(), "AndroidTheme");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         }
@@ -92,7 +146,7 @@ public class MainActivity extends Activity {
         });
 
         // 清 HTTP 缓存（不影响 DOM storage / localStorage，学习进度安全）：
-        // 让线上重新发布的 index.html 立刻生效，旧缓存的 ?v 旧资源顶不掉的问题就没了
+        // 线上重新发布后，旧缓存的 index.html(?v=旧版) 顶不掉，加这行强制重抓最新版
         web.clearCache(true);
         if (savedInstanceState != null) {
             web.restoreState(savedInstanceState);
