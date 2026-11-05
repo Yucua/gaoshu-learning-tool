@@ -6297,12 +6297,31 @@ window.CHAPOS.push({
     TERMS = g.slice().sort(function(a,b){ return b.name.length - a.name.length; });
     return TERMS;
   }
+
+  /* 术语 Trie：一次建好，markTerms 的每字符定位从 O(术语数) 降到 O(命中链长)。
+     节点形如 { [ch]:node, termId?:id, intro?:n }；叶子挂 term。构建 O(总字符) ，构建后 O(文本长 × 最长命中)。 */
+  var TERM_TRIE = null;
+  function buildTermTrie(){
+    if(TERM_TRIE) return TERM_TRIE;
+    var root = {};
+    termList().forEach(function(t){
+      if(!t.name || !t.name.length) return;
+      var p = root;
+      for(var i=0;i<t.name.length;i++){
+        var c = t.name.charAt(i);
+        if(!p[c]) p[c] = {};
+        p = p[c];
+      }
+      p.term = t;   /* 叶子挂整个术语对象，markTerms 直接取 name/intro/id */
+    });
+    TERM_TRIE = root;
+    return root;
+  }
   function curCh(){ return parseInt(view.ch,10) || 1; }
 
   /* 把正文里的术语包成可点的 span（每个词每页只标第一次，避免满屏下划线） */
   function markTerms(root){
-    var list = termList();
-    if(!list.length || !root) return;
+    if(!(window.GLOSSARY||[]).length || !root) return;
     var seen = {};
     var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode: function(node){
@@ -6321,13 +6340,16 @@ window.CHAPOS.push({
     var nodes = [], n;
     while((n = walker.nextNode())) nodes.push(n);
 
+    var trie = buildTermTrie();
     nodes.forEach(function(node){
       var text = node.nodeValue, idx = 0, last = 0, frag = null;
       while(idx < text.length){
-        var hit = null;
-        for(var k=0;k<list.length;k++){
-          var t = list[k];
-          if(!seen[t.id] && text.substr(idx, t.name.length) === t.name){ hit = t; break; }
+        /* 在 idx 处沿 Trie 走到底，记下所有命中叶子（从最长到最短），取第一个未标过的 */
+        var hit = null, node2 = trie;
+        for(var j = idx; j < text.length; j++){
+          node2 = node2[text.charAt(j)];
+          if(!node2) break;
+          if(node2.term && !seen[node2.term.id]) hit = node2.term;
         }
         if(hit){
           if(!frag) frag = document.createDocumentFragment();
@@ -6492,7 +6514,7 @@ window.CHAPOS.push({
     main.innerHTML = h;
     renderSidebar();
     renderMobnav();
-    typeset();
+    typeset(main);
     closePop();
     markTerms(main);
     if(view.page==="tool" && view.tool==="test") startTimer();
@@ -6773,14 +6795,16 @@ window.CHAPOS.push({
   }
 
   /* ===================== KaTeX ===================== */
-  function typeset(){
+  function typeset(el){
+    /* 只重排传入元素（默认 main），避免把 #sidebar / #pop / 整页扫一遍 */
+    var target = el || document.body;
     if(window.renderMathInElement){
       try{
-        renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false}],throwOnError:false,output:"html"});
+        renderMathInElement(target,{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false}],throwOnError:false,output:"html"});
         return;
       }catch(e){}
     }
-    var ns=document.querySelectorAll(".latex");
+    var ns=(target.querySelectorAll||document.querySelectorAll).call(target,".latex");
     for(var i=0;i<ns.length;i++){
       var t=ns[i].textContent;
       if(t.slice(0,2)==="$$"&&t.slice(-2)==="$$"&&t.length>4) t=t.slice(2,-2);
