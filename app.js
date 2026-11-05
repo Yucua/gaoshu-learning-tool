@@ -707,7 +707,16 @@
     var dark = document.documentElement.getAttribute("data-theme") === "dark";
     if(dark){ document.documentElement.removeAttribute("data-theme"); try{ localStorage.removeItem(LS_THEME); }catch(e){} }
     else{ document.documentElement.setAttribute("data-theme","dark"); try{ localStorage.setItem(LS_THEME,"dark"); }catch(e){} }
+    syncSystemBarTheme();
     renderSidebar();
+  }
+
+  /* 通知 APK 把系统状态栏/导航栏一起变色（普通浏览器里没有这个桥，静默跳过） */
+  function syncSystemBarTheme(){
+    try{
+      var dark = document.documentElement.getAttribute("data-theme") === "dark";
+      if(window.AndroidTheme && window.AndroidTheme.setTheme) window.AndroidTheme.setTheme(dark ? "dark" : "light");
+    }catch(e){}
   }
 
   /* ===================== 移动端底部导航 ===================== */
@@ -1118,6 +1127,7 @@
   window.addEventListener("scroll", function(){ toTop.classList.toggle("show", window.scrollY>400); });
 
   bindSearch();
+  syncSystemBarTheme();   /* 启动时把已保存主题同步给系统状态栏 */
   render();
   window.addEventListener("load", function(){ if(window.renderMathInElement) typeset(); });
 })();
