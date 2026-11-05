@@ -10,7 +10,7 @@ SRC="$(cd "$(dirname "$0")" && pwd)"
 WORK="/d/apkbuild"
 KS="$SRC/c100-release.jks"
 # 密钥密码从环境变量读，不写死在脚本里（脚本要进公开仓库）。
-# 本地打包前先 export KSPASS='c100journal'
+# 本地打包前先 export KSPASS='你的密钥密码'
 KSPASS="${KSPASS:-}"
 VERSION_CODE="${1:-1}"
 VERSION_NAME="${2:-1.0}"

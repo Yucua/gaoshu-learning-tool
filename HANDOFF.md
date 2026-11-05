@@ -1,6 +1,7 @@
 # HANDOFF.md — 高数学习工具 · 现状交接
 
-> 最近更新：2026-11-05（Capacitor 死路清理后）
+> 最近更新：2026-11-06（全量过项目 + 文档漂移审计后）
+> **接手前务必先读「五、接手速查」和「六、出包真源在哪」——本文档已逐项用硬事实核验过。**
 
 ## 一、项目定位
 同济八版《高等数学》（上+下）自学工具，纯前端零依赖，12 章 81 节。
@@ -23,8 +24,8 @@ gaoshu/
 ├── 启动-高数学习工具.bat   本地 python http.server 8300
 ├── 高数学习工具.html       构建产物（双击即用）
 ├── 打包APK指南.md          APK 打包流程
-├── android-app/           ★ 真实出包通道（轻量 aapt2/d8/apksigner，无 Gradle）
-│   ├── AndroidManifest.xml  versionCode/versionName（build.sh 参数覆盖）
+├── android-app/           出包源副本（真源在仓库外 gaoshu-app，本目录 2026-11-06 已同步一致，仅作 git 可追溯备份）
+│   ├── AndroidManifest.xml  ★ versionCode 以本文件为准（aapt2 命令行参数无法覆盖它，实测 manifest 赢）
 │   ├── build.sh             一条命令出 APK（aapt2→javac→d8→zipalign→apksigner）
 │   ├── src/com/yucua/gaoshu/MainActivity.java  WebView 壳，HOME_URL=在线地址
 │   ├── res/                 图标/主题/颜色
@@ -42,7 +43,8 @@ gaoshu/
 - **缓存版本**：`index.html` 里所有 `?v=N` 统一为当前 `v28`。改动任何前端文件后**必须升版**并同步到所有 15 个引用行。
 - **构建确定性**：`node 构建单文件版.js` 输出字节级可重复（`test_metrics.py` 风格验证过）。
 - **★ 真实出包通道 = 仓库外 `D:\小玩具\gaoshu-app\`**（v1.0~v1.4 都在这；build.sh 与仓库 `android-app/` 同源，但仓库那套 2026-11-06 前是旧源——旧占位图标、壳缺系统栏桥，**出包别用它**，现已同步一致）。
-  - 出包命令：`cd D:/小玩具/gaoshu-app && export KSPASS='c100journal' && bash build.sh 5 1.4`。产物 `gaoshu-app/dist/`。manifest 写死 versionCode，改版本号走命令行传参并同步改 manifest。当前已出 **versionCode 5 / v1.4**。
+  - 出包命令：`cd D:/小玩具/gaoshu-app && export KSPASS='你的密钥密码' && bash build.sh 5 1.4`。产物 `gaoshu-app/dist/`。
+  - **★ 版本号机制（2026-11-06 实测推翻旧说法）**：aapt2 里 **manifest 赢，命令行参数无效**。`build.sh` 第 23-26 行虽把 `--version-code` 传给 aapt2，但 manifest 的 `android:versionCode` 存在时**以 manifest 为准**（把 manifest 写 99、命令行传 5，实测产出 versionCode=99）。所以改版本号**必须改 manifest 的 versionCode/versionName**，命令行那俩参数形同虚设、改不改都行。当前 manifest = `5 / 1.4`。
 - **APK 壳特性**：
   - 加载**在线地址**（`HOME_URL`），联网即用，改内容不需重装 App。
   - 加载前 `web.clearCache(true)`：强制重抓线上最新 index.html，避免手机 WebView 缓存旧版顶不掉（**只清 HTTP 缓存，不动 localStorage，学习进度/错题本/同步码数据不受影响**）。2026-11-06 v1.4 加入。
@@ -63,9 +65,12 @@ node 构建单文件版.js
 # 校验章节范围
 node 检查章节范围.js
 
-# 出 APK（在仓库根目录，Git Bash）
+# 出 APK（真源在仓库外 gaoshu-app，不是仓库 android-app）
+cd D:/小玩具/gaoshu-app
 export KSPASS='你的密钥密码'
-bash android-app/build.sh 4 1.3
+# ★ 先改 AndroidManifest.xml 的 versionCode/versionName（aapt2 以 manifest 为准，命令行参数无效）
+# 再出包：
+bash build.sh <vc> <ver>        # 例：bash build.sh 6 1.5（同时 manifest 已改成 6/1.5）
 
 # 本地启动
 # 双击 启动-高数学习工具.bat（python http.server 8300）
@@ -99,6 +104,36 @@ bash android-app/build.sh 4 1.3
   ```
 - 15 个 `?v=28` 行 + `构建单文件版.js` 同步升版；单文件版重建。
 - **缓存版本现为 v28**（见下节红线）。
+
+## 五、接手速查（2026-11-06 全量核验，全部有硬事实支撑）
+
+| 项 | 当前事实 | 核验方式 |
+|---|---|---|
+| git | main 干净，远程 `Yucua/gaoshu-learning-tool`（GitHub） | `git status / remote -v` |
+| 缓存版本 | **v28**：index.html 15 处 + 构建脚本 15 处全一致 | `grep -c '?v=28'` = 15/15 |
+| 构建 | `node 构建单文件版.js` 输出**字节级可重复**（重建 diff 为空） | `cmp` 前后产物 |
+| 章节 | `node 检查章节范围.js` 12/12 通过 | 直接跑 |
+| 单文件产物 | `高数学习工具.html` ≈ 1017KB，git 跟踪，双击即用 | `ls -la` |
+| 线上 | `https://gaoshu-09255.app.workbuddy.host/?sharecode=JIU2U3JLZU`，已发 **v28**（curl 实测 15 个 ?v=28） | `curl … \| grep -oE '\?v=[0-9]+'` |
+| 出包真源 | **仓库外 `D:\小玩具\gaoshu-app\`**（v1.0~v1.4 全在其 dist/）；仓库 `gaoshu/android-app/` 已同步为一致副本，**只认 gaoshu-app** | 6 个源文件 `cmp` 全一致 + jks md5 同一 |
+| 最新 APK | `gaoshu-app/dist/高数学习工具-v1.4.apk`（vc=5，16852B） | `aapt2 dump badging` |
+| 签名 | jks 两处 md5 一致（同源）；v1.3/v1.4 SHA-256 `1f403ca6…` 一致可覆盖安装 | `md5sum` + `apksigner verify` |
+| 图标 | lim+箭头新图 4296B（md5 `256dbd…`），两处一致；旧占位图 22KB 已全清 | `md5sum` |
+| 壳特性 | 系统栏桥 `setBarColor`/`setTheme` + 启动 `clearCache(true)`（v1.4 加入） | `grep clearCache` = 1 |
+| 版本号机制 | **aapt2 以 manifest 为准，命令行参数无效**（manifest=99 命令行=5 → 实测产出 99） | 临时副本实测 |
+| 安全 | 签名密码已从 HANDOFF/build.sh 注释清除（历史 commit 里仍有过一次明文，见「七、已知风险」） | `grep c100journal` = 0 |
+
+## 五点八、v1.4 出包 + 文档全量审计（2026-11-06）
+- 在**真源 `gaoshu-app/`** 出 v1.4（vc 5）：壳加 `clearCache(true)`（只清 HTTP 缓存、不动 localStorage），修「线上发新版但手机缓存旧版顶不掉」。
+- 同步仓库 `gaoshu/android-app/`（图标/壳/manifest 三件与真源 cmp 全一致），删其 dist 遗留旧包。
+- **推翻旧结论**：「build.sh 参数覆盖 manifest」是错的——aapt2 实测 **manifest 赢**，改版本号必须改 manifest。
+- **清掉明文签名密码**：HANDOFF.md、两份 build.sh 注释里的 `c100journal` 全换占位符（git 历史里曾存在一次，见「七、已知风险」）。
+- `打包APK指南.md` 整篇重写（原写的是仓库内 android-app 旧通道 + 错版本号机制）。
+
+## 七、已知风险（接手必读）
+- **git 历史里有过一次签名密码明文**（`cefca5b` 之前的 HANDOFF.md，已清掉，仅历史 commit 可见）。jks 本体不在仓库，风险有限；若要彻底消除可对该仓库做 BFG/filter-branch 洗史 + 强制推送（会改 commit hash，慎做），或干脆换新密钥对重新签名出包。
+- `gaoshu-app/` 在仓库外、**不在 git 里**：jks/新图标/壳代码改动无版本记录。出包前改动务必在仓库 `android-app/` 留同步副本。
+- aapt2 参数 `--version-code` 写进 build.sh 但**实际无效**（manifest 赢），别被脚本参数骗到。
 
 ## 六、待办 / 可选改进
 - 云端自动同步（替代手动同步码）——目前未做，若嫌手动繁琐可评估。
