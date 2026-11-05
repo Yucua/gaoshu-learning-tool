@@ -340,36 +340,38 @@ p{margin:var(--sp2) 0;max-width:var(--measure);}
 }
 
 /* ===== 横屏矮屏（手机/平板横放）：压上下框架，把高度让给内容 ===== */
-@media (orientation:landscape) and (max-height:600px){
+@media (orientation:landscape) and (max-height:780px){
   /* 顶栏压缩：tabbar + 面包屑 + 返回行 */
-  .tabbar{padding:4px 14px 0;}
-  .tabs{padding-bottom:3px;}
-  .tab{padding:4px 10px;font-size:12px;}
-  .crumb{padding:4px 0 0;}
-  .crumb h1{font-size:16px;}
-  .crumb .ix{font-size:12px;}
-  .backrow{padding:4px 0 0;}
-  .card{margin:8px 0;}
-  /* 桌面宽：侧栏收窄更紧凑 */
-  .sidebar{width:208px;flex:0 0 208px;padding:10px 10px 24px;}
-  .brand{font-size:15px;}
-  .sitem{padding:5px 8px;}
+  .tabbar{padding:2px 14px 0;}
+  .tabs{padding-bottom:2px;}
+  .tab{padding:3px 9px;font-size:11.5px;}
+  .crumb{padding:2px 0 0;}
+  .crumb h1{font-size:15px;}
+  .crumb .ix{font-size:11.5px;}
+  .backrow{padding:2px 0 0;}
+  .card{margin:6px 0;}
+  /* 桌面宽：侧栏收窄更紧凑，横向让给内容 */
+  .sidebar{width:192px;flex:0 0 192px;padding:8px 10px 20px;}
+  .brand{font-size:14px;margin:2px 4px;}
+  .brand small{font-size:10.5px;}
+  .sitem{padding:4px 8px;}
   /* 移动宽：底部导航压扁 */
-  .mobnav{padding:3px 4px calc(3px + env(safe-area-inset-bottom));}
-  .mobnav button{min-height:38px;padding:3px 2px 2px;font-size:9.5px;}
-  .mobnav button .mi{font-size:14px;}
-  .content{padding-bottom:84px!important;}
-  .toTop{bottom:62px;width:34px;height:34px;font-size:15px;}
-  .search-fab{bottom:62px;width:40px;height:40px;font-size:16px;}
+  .mobnav{padding:2px 4px calc(2px + env(safe-area-inset-bottom));}
+  .mobnav button{min-height:34px;padding:2px 2px;font-size:9px;}
+  .mobnav button .mi{font-size:13px;}
+  .content{padding-bottom:76px!important;}
+  .toTop{bottom:56px;width:32px;height:32px;font-size:14px;}
+  .search-fab{bottom:56px;width:38px;height:38px;font-size:15px;}
 }
 /* 手机横屏（仍走移动布局）：顶栏行也压扁 */
-@media (orientation:landscape) and (max-height:600px) and (max-width:850px){
-  .sidebar{padding:5px 10px 6px;gap:4px 6px;}
+@media (orientation:landscape) and (max-height:780px) and (max-width:850px){
+  .sidebar{padding:4px 10px 5px;gap:3px 6px;}
   .sidebar .brand{font-size:13px;}
-  .sidebar .side-toggle{padding:4px 9px;font-size:12px;}
-  .dash-h{margin:10px 0 0;}
-  .dash{gap:8px;margin-top:8px;}
-  .dcard{padding:10px 12px;}
+  .sidebar .side-toggle{padding:3px 9px;font-size:11.5px;}
+  .dash-h{margin:8px 0 0;}
+  .dash{gap:7px;margin-top:7px;}
+  .dcard{padding:9px 11px;}
+  .search-fab{bottom:56px;width:38px;height:38px;font-size:15px;}
 }
 
 /* ===== 深色主题：只换变量，结构不动 ===== */
@@ -467,20 +469,20 @@ window.addEventListener("error", function(e){
     <div class="search-foot">↑ ↓ 选择 · Enter 打开 · Esc 关闭</div>
   </div>
 </div>
-<script src="glossary.js?v=11"></script>
-<script src="pinyin.js?v=11"></script>
-<script src="chapters/ch1.js?v=11"></script>
-<script src="chapters/ch2.js?v=11"></script>
-<script src="chapters/ch3.js?v=11"></script>
-<script src="chapters/ch4.js?v=11"></script>
-<script src="chapters/ch5.js?v=11"></script>
-<script src="chapters/ch6.js?v=11"></script>
-<script src="chapters/ch7.js?v=11"></script>
-<script src="chapters/ch8.js?v=11"></script>
-<script src="chapters/ch9.js?v=11"></script>
-<script src="chapters/ch10.js?v=11"></script>
-<script src="chapters/ch11.js?v=11"></script>
-<script src="chapters/ch12.js?v=11"></script>
-<script src="app.js?v=11"></script>
+<script src="glossary.js?v=12"></script>
+<script src="pinyin.js?v=12"></script>
+<script src="chapters/ch1.js?v=12"></script>
+<script src="chapters/ch2.js?v=12"></script>
+<script src="chapters/ch3.js?v=12"></script>
+<script src="chapters/ch4.js?v=12"></script>
+<script src="chapters/ch5.js?v=12"></script>
+<script src="chapters/ch6.js?v=12"></script>
+<script src="chapters/ch7.js?v=12"></script>
+<script src="chapters/ch8.js?v=12"></script>
+<script src="chapters/ch9.js?v=12"></script>
+<script src="chapters/ch10.js?v=12"></script>
+<script src="chapters/ch11.js?v=12"></script>
+<script src="chapters/ch12.js?v=12"></script>
+<script src="app.js?v=12"></script>
 </body>
 </html>
