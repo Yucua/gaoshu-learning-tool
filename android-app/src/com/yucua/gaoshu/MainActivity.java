@@ -91,6 +91,9 @@ public class MainActivity extends Activity {
             }
         });
 
+        // 清 HTTP 缓存（不影响 DOM storage / localStorage，学习进度安全）：
+        // 让线上重新发布的 index.html 立刻生效，旧缓存的 ?v 旧资源顶不掉的问题就没了
+        web.clearCache(true);
         if (savedInstanceState != null) {
             web.restoreState(savedInstanceState);
         } else {
