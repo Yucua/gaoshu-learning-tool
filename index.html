@@ -365,9 +365,12 @@ p{margin:var(--sp2) 0;max-width:var(--measure);}
 }
 /* 手机横屏（仍走移动布局）：顶栏行也压扁 */
 @media (orientation:landscape) and (max-height:780px) and (max-width:850px){
-  .sidebar{position:static;z-index:auto;max-height:none;padding:4px 10px 5px;gap:3px 6px;}
-  .sidebar .brand{font-size:13px;}
-  .sidebar .side-toggle{padding:3px 9px;font-size:11.5px;}
+  .sidebar{position:static;z-index:auto;max-height:none;padding:5px 10px;gap:3px 6px;flex-wrap:nowrap;}
+  /* 顶栏压成单行：☰目录 | 品牌(可省略) | 🌙主题，避免换行堆叠成多行留白 */
+  .sidebar .side-toggle{order:1;padding:3px 8px;font-size:11.5px;}
+  .sidebar .brand{order:2;font-size:13px;flex:1 1 0%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sidebar .side-theme-row{order:3;flex:0 0 auto;margin:0;gap:3px;}
+  .sidebar .side-theme-row .sitem{padding:3px 7px;min-width:0;}
   .dash-h{margin:8px 0 0;}
   .dash{gap:7px;margin-top:7px;}
   .dcard{padding:9px 11px;}
@@ -469,20 +472,20 @@ window.addEventListener("error", function(e){
     <div class="search-foot">↑ ↓ 选择 · Enter 打开 · Esc 关闭</div>
   </div>
 </div>
-<script src="glossary.js?v=13"></script>
-<script src="pinyin.js?v=13"></script>
-<script src="chapters/ch1.js?v=13"></script>
-<script src="chapters/ch2.js?v=13"></script>
-<script src="chapters/ch3.js?v=13"></script>
-<script src="chapters/ch4.js?v=13"></script>
-<script src="chapters/ch5.js?v=13"></script>
-<script src="chapters/ch6.js?v=13"></script>
-<script src="chapters/ch7.js?v=13"></script>
-<script src="chapters/ch8.js?v=13"></script>
-<script src="chapters/ch9.js?v=13"></script>
-<script src="chapters/ch10.js?v=13"></script>
-<script src="chapters/ch11.js?v=13"></script>
-<script src="chapters/ch12.js?v=13"></script>
-<script src="app.js?v=13"></script>
+<script src="glossary.js?v=14"></script>
+<script src="pinyin.js?v=14"></script>
+<script src="chapters/ch1.js?v=14"></script>
+<script src="chapters/ch2.js?v=14"></script>
+<script src="chapters/ch3.js?v=14"></script>
+<script src="chapters/ch4.js?v=14"></script>
+<script src="chapters/ch5.js?v=14"></script>
+<script src="chapters/ch6.js?v=14"></script>
+<script src="chapters/ch7.js?v=14"></script>
+<script src="chapters/ch8.js?v=14"></script>
+<script src="chapters/ch9.js?v=14"></script>
+<script src="chapters/ch10.js?v=14"></script>
+<script src="chapters/ch11.js?v=14"></script>
+<script src="chapters/ch12.js?v=14"></script>
+<script src="app.js?v=14"></script>
 </body>
 </html>

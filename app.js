@@ -98,7 +98,7 @@
   function renderSidebar(){
     var h = '<button class="side-toggle" data-side-toggle>☰ 目录</button>';
     h += '<div class="brand">同济高数 · 学习工具<small>学 · 练 · 测 · 复盘</small></div>';
-    h += '<div style="margin-top:10px;display:flex;gap:8px">'+
+    h += '<div class="side-theme-row" style="margin-top:10px;display:flex;gap:8px">'+
          '<button class="sitem'+(view.page==="home"?" active":"")+'" style="flex:1" data-dash="home"><span class="no">🏠</span><span class="t">板块首页</span></button>'+
          '<button class="sitem" data-theme-toggle style="flex:0 0 auto;justify-content:center;min-width:52px" title="切换深色/浅色"><span class="no">'+(document.documentElement.getAttribute("data-theme")==="dark"?"☀️":"🌙")+'</span></button></div>';
     h += '<div class="side-sub">章节目录</div><div class="side-chaps">';
