@@ -6019,24 +6019,24 @@ window.CHAPOS.push({
       ['1','2'],['2','3'],['2','4'],['4','5'],['5','6'],['2','7'],['4','7'],['3','12'],
       ['1','8'],['8','9'],['9','10'],['8','11'],['9','11'],['10','11'],['5','12']
     ];
-    /* 手机友好：单列自上而下（学序 1→12），依赖线走右侧肘形通道，宽度按需展开 */
-    var Y0 = 30, GAP = 48, BOX_W = 160, BOX_X = 60;
+    /* 手机友好：单列自上而下（学序 1→12），不画连线，依赖关系直接写在节点里 */
+    var prereq = {};
+    EDGES.forEach(function(e){ (prereq[e[1]] = prereq[e[1]]||[]).push(e[0]); });
+    var Y0 = 30, GAP = 48, BOX_W = 240, BOX_X = 20;
     var yc = {}; MAP.forEach(function(m,i){ yc[m.id] = Y0 + i*GAP + 17; });
-    var W = 336, H = Y0 + 11*GAP + 17 + 14;
-    var h = '<div class="card"><div class="zone" style="margin-top:8px"><h2>知识地图 <span class="muted">12 章依赖关系 · 点节点进章</span></h2></div>'+
-      '<div class="muted" style="font-size:11.5px;margin:4px 0 6px">自上而下就是学习顺序；右侧的线 = 前置依赖。悬停看关联，点击跳章。</div>'+
+    var W = BOX_X + BOX_W + 10, H = Y0 + 11*GAP + 34;
+    var h = '<div class="card"><div class="zone" style="margin-top:8px"><h2>知识地图 <span class="muted">12 章学习顺序 · 点节点进章</span></h2></div>'+
+      '<div class="muted" style="font-size:11.5px;margin:4px 0 6px">从上往下就是学序；「前置」= 学它之前要会的章。悬停看关联，点击跳章。</div>'+
       '<svg class="mapbox" id="kmap" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
-    EDGES.forEach(function(e,ei){
-      var xb = 240 + ei*5;  /* 每条线一个 x 通道，避免叠在一起 */
-      var p = BOX_X + BOX_W + ',' + yc[e[0]] + ' ' + xb + ',' + yc[e[0]] + ' ' + xb + ',' + yc[e[1]] + ' ' + (BOX_X+BOX_W) + ',' + yc[e[1]];
-      h += '<polyline data-from="'+e[0]+'" data-to="'+e[1]+'" points="'+p+'" fill="none"/>';
-    });
     MAP.forEach(function(m,i){
       var st = chapStat(m.id);
       var pct = st.all ? Math.round(st.good*100/st.all) : 0;
-      h += '<g class="mnode" data-gotoch="'+m.id+'"><rect x="'+BOX_X+'" y="'+(yc[m.id]-17)+'" width="'+BOX_W+'" height="34" rx="8"/>'+
-           '<text x="'+(BOX_X+BOX_W/2)+'" y="'+(yc[m.id]-2)+'">'+m.id+'. '+m.t+'</text>'+
-           '<text class="pct" x="'+(BOX_X+BOX_W/2)+'" y="'+(yc[m.id]+11)+'">'+pct+'% 掌握 · '+st.pr+' 题</text></g>';
+      var pre = prereq[m.id] || [];
+      var preTxt = pre.length ? '前置 第'+pre.join('·')+' 章' : '无前置';
+      h += '<g class="mnode" data-gotoch="'+m.id+'" data-pre="'+pre.join(",")+'">'+
+           '<rect x="'+BOX_X+'" y="'+(yc[m.id]-17)+'" width="'+BOX_W+'" height="34" rx="8"/>'+
+           '<text x="'+(BOX_X+12)+'" y="'+(yc[m.id]-1)+'" text-anchor="start">'+m.id+'. '+m.t+'</text>'+
+           '<text class="pct" x="'+(BOX_X+BOX_W-12)+'" y="'+(yc[m.id]+11)+'" text-anchor="end">'+preTxt+' · '+pct+'%</text></g>';
     });
     h += '</svg>'+
       '<div class="pbar" style="margin-top:10px"><i id="kmap-bar"></i></div>'+
@@ -6396,17 +6396,22 @@ window.CHAPOS.push({
     /* 知识地图：悬停高亮关联边 + 点击跳章 */
     var map = root.querySelector('#kmap');
     if(map){
-      var lines = map.querySelectorAll('polyline');
       var nodes = map.querySelectorAll('.mnode');
       nodes.forEach(function(node){
         node.addEventListener('mouseover', function(){
           var id = node.getAttribute('data-gotoch');
-          lines.forEach(function(ln){ if(ln.getAttribute('data-from')===id || ln.getAttribute('data-to')===id) ln.classList.add('hl'); });
+          var pres = (node.getAttribute('data-pre')||'').split(',').filter(Boolean);
+          nodes.forEach(function(nd){
+            var nid = nd.getAttribute('data-gotoch');
+            if(nid===id) return;
+            var depsOnMe = (nd.getAttribute('data-pre')||'').split(',').indexOf(id)>=0;
+            nd.classList.toggle('on', pres.indexOf(nid)>=0 || depsOnMe);
+          });
           var st = chapStat(id); var pct = st.all?Math.round(st.good*100/st.all):0;
           var tip = document.getElementById('kmap-tip'); if(tip) tip.innerHTML = '第'+id+'章 · 掌握 '+st.good+'/'+st.all+'（'+pct+'%）· 题 '+st.pr+' · 错题 '+st.wrong;
         });
         node.addEventListener('mouseleave', function(){
-          lines.forEach(function(ln){ ln.classList.remove('hl'); });
+          nodes.forEach(function(nd){ nd.classList.remove('on'); });
           var tip = document.getElementById('kmap-tip'); if(tip) tip.textContent = '悬停任意节点看它的前后关系。';
         });
         node.addEventListener('click', function(){

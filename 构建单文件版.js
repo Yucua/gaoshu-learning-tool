@@ -44,20 +44,20 @@ function inlineScript(src) {
 const tagKcss  = '<link rel="stylesheet" href="vendor/katex/katex.min.css" />';
 const tagKjs   = '<script defer src="vendor/katex/katex.min.js"></script>';
 const tagAuto  = '<script defer src="vendor/katex/contrib/auto-render.min.js"></script>';
-const tagCh1   = '<script src="chapters/ch1.js?v=5"></script>';
-const tagCh2   = '<script src="chapters/ch2.js?v=5"></script>';
-const tagCh3   = '<script src="chapters/ch3.js?v=5"></script>';
-const tagCh4   = '<script src="chapters/ch4.js?v=5"></script>';
-const tagCh5   = '<script src="chapters/ch5.js?v=5"></script>';
-const tagCh6   = '<script src="chapters/ch6.js?v=5"></script>';
-const tagCh7   = '<script src="chapters/ch7.js?v=5"></script>';
-const tagCh8   = '<script src="chapters/ch8.js?v=5"></script>';
-const tagCh9   = '<script src="chapters/ch9.js?v=5"></script>';
-const tagCh10  = '<script src="chapters/ch10.js?v=5"></script>';
-const tagCh11  = '<script src="chapters/ch11.js?v=5"></script>';
-const tagCh12  = '<script src="chapters/ch12.js?v=5"></script>';
-const tagApp   = '<script src="app.js?v=5"></script>';
-const tagGloss = '<script src="glossary.js?v=5"></script>';
+const tagCh1   = '<script src="chapters/ch1.js?v=6"></script>';
+const tagCh2   = '<script src="chapters/ch2.js?v=6"></script>';
+const tagCh3   = '<script src="chapters/ch3.js?v=6"></script>';
+const tagCh4   = '<script src="chapters/ch4.js?v=6"></script>';
+const tagCh5   = '<script src="chapters/ch5.js?v=6"></script>';
+const tagCh6   = '<script src="chapters/ch6.js?v=6"></script>';
+const tagCh7   = '<script src="chapters/ch7.js?v=6"></script>';
+const tagCh8   = '<script src="chapters/ch8.js?v=6"></script>';
+const tagCh9   = '<script src="chapters/ch9.js?v=6"></script>';
+const tagCh10  = '<script src="chapters/ch10.js?v=6"></script>';
+const tagCh11  = '<script src="chapters/ch11.js?v=6"></script>';
+const tagCh12  = '<script src="chapters/ch12.js?v=6"></script>';
+const tagApp   = '<script src="app.js?v=6"></script>';
+const tagGloss = '<script src="glossary.js?v=6"></script>';
 
 [["css", tagKcss, "<style>\n" + kcss + "\n</style>"],
  ["kjs", tagKjs, inlineScript(katexJs)],
