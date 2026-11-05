@@ -489,20 +489,49 @@ window.addEventListener("error", function(e){
     <div class="search-foot">↑ ↓ 选择 · Enter 打开 · Esc 关闭</div>
   </div>
 </div>
-<script src="glossary.js?v=24"></script>
-<script src="pinyin.js?v=24"></script>
-<script src="chapters/ch1.js?v=24"></script>
-<script src="chapters/ch2.js?v=24"></script>
-<script src="chapters/ch3.js?v=24"></script>
-<script src="chapters/ch4.js?v=24"></script>
-<script src="chapters/ch5.js?v=24"></script>
-<script src="chapters/ch6.js?v=24"></script>
-<script src="chapters/ch7.js?v=24"></script>
-<script src="chapters/ch8.js?v=24"></script>
-<script src="chapters/ch9.js?v=24"></script>
-<script src="chapters/ch10.js?v=24"></script>
-<script src="chapters/ch11.js?v=24"></script>
-<script src="chapters/ch12.js?v=24"></script>
-<script src="app.js?v=24"></script>
+<div id="sync-overlay" class="search-overlay" aria-hidden="true">
+  <div class="search-panel" style="height:auto;max-height:86vh">
+    <div class="search-panel-head">
+      <b style="flex:1;font-size:15px">同步码 · 手机 ⇄ 电脑</b>
+      <button id="sync-close" class="btn" title="关闭 (Esc)">✕</button>
+    </div>
+    <div style="padding:14px 16px 18px;overflow:auto">
+      <div class="muted" style="font-size:12.5px;line-height:1.7;margin-bottom:10px">
+        在<b>A 设备</b>点「生成」→ 复制这段码 → 到<b>B 设备</b>粘贴 → 点「合并」。<br>
+        码里只有你的掌握度和错题，不含账号信息，不会上传任何服务器。
+      </div>
+
+      <div style="font-size:12.5px;font-weight:700;color:var(--accent);margin:14px 0 6px">① 生成（本机 → 另一台）</div>
+      <textarea id="sync-code-out" readonly style="width:100%;height:78px;font:12px/1.5 Consolas,monospace;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);resize:none;word-break:break-all" placeholder="点下面按钮生成"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn primary" id="sync-gen">生成同步码</button>
+        <button class="btn" id="sync-copy">复制</button>
+      </div>
+
+      <div style="font-size:12.5px;font-weight:700;color:var(--accent);margin:18px 0 6px">② 接收（另一台 → 本机）</div>
+      <textarea id="sync-code-in" style="width:100%;height:78px;font:12px/1.5 Consolas,monospace;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);resize:none;word-break:break-all" placeholder="把另一台生成的码粘到这里"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn primary" id="sync-apply">合并到本机</button>
+        <button class="btn" id="sync-paste">从剪贴板粘贴</button>
+      </div>
+      <div id="sync-msg" class="muted" style="font-size:12px;margin-top:10px;min-height:18px"></div>
+    </div>
+  </div>
+</div>
+<script src="glossary.js?v=25"></script>
+<script src="pinyin.js?v=25"></script>
+<script src="chapters/ch1.js?v=25"></script>
+<script src="chapters/ch2.js?v=25"></script>
+<script src="chapters/ch3.js?v=25"></script>
+<script src="chapters/ch4.js?v=25"></script>
+<script src="chapters/ch5.js?v=25"></script>
+<script src="chapters/ch6.js?v=25"></script>
+<script src="chapters/ch7.js?v=25"></script>
+<script src="chapters/ch8.js?v=25"></script>
+<script src="chapters/ch9.js?v=25"></script>
+<script src="chapters/ch10.js?v=25"></script>
+<script src="chapters/ch11.js?v=25"></script>
+<script src="chapters/ch12.js?v=25"></script>
+<script src="app.js?v=25"></script>
 </body>
 </html>

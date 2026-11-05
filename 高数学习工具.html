@@ -506,6 +506,35 @@ window.addEventListener("error", function(e){
     <div class="search-foot">↑ ↓ 选择 · Enter 打开 · Esc 关闭</div>
   </div>
 </div>
+<div id="sync-overlay" class="search-overlay" aria-hidden="true">
+  <div class="search-panel" style="height:auto;max-height:86vh">
+    <div class="search-panel-head">
+      <b style="flex:1;font-size:15px">同步码 · 手机 ⇄ 电脑</b>
+      <button id="sync-close" class="btn" title="关闭 (Esc)">✕</button>
+    </div>
+    <div style="padding:14px 16px 18px;overflow:auto">
+      <div class="muted" style="font-size:12.5px;line-height:1.7;margin-bottom:10px">
+        在<b>A 设备</b>点「生成」→ 复制这段码 → 到<b>B 设备</b>粘贴 → 点「合并」。<br>
+        码里只有你的掌握度和错题，不含账号信息，不会上传任何服务器。
+      </div>
+
+      <div style="font-size:12.5px;font-weight:700;color:var(--accent);margin:14px 0 6px">① 生成（本机 → 另一台）</div>
+      <textarea id="sync-code-out" readonly style="width:100%;height:78px;font:12px/1.5 Consolas,monospace;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);resize:none;word-break:break-all" placeholder="点下面按钮生成"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn primary" id="sync-gen">生成同步码</button>
+        <button class="btn" id="sync-copy">复制</button>
+      </div>
+
+      <div style="font-size:12.5px;font-weight:700;color:var(--accent);margin:18px 0 6px">② 接收（另一台 → 本机）</div>
+      <textarea id="sync-code-in" style="width:100%;height:78px;font:12px/1.5 Consolas,monospace;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);resize:none;word-break:break-all" placeholder="把另一台生成的码粘到这里"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn primary" id="sync-apply">合并到本机</button>
+        <button class="btn" id="sync-paste">从剪贴板粘贴</button>
+      </div>
+      <div id="sync-msg" class="muted" style="font-size:12px;margin-top:10px;min-height:18px"></div>
+    </div>
+  </div>
+</div>
 <script>
 /* 知识卡片库：点任意术语弹出的小讲解。
  * 字段：id / name 正文匹配词 / intro 第几章才学 / sec 对应小节
@@ -5722,6 +5751,98 @@ window.CHAPOS.push({
     sidebar.innerHTML = h;
   }
 
+  /* ===================== 同步码：跨设备搬运进度 ===================== */
+  // 编码：按章节顺序把所有知识点/错题状态压成位串（每项 1 字符），整码约 600 字符
+  /* 按章节顺序展开所有知识点键（编解码两端一致的前提） */
+  function allCheckKeys(){
+    var keys=[];
+    chaps().forEach(function(c){
+      (c.sections||[]).forEach(function(s,si){
+        (s.checklist||[]).forEach(function(it){ keys.push(c.no+"_"+si+"_"+it.id); });
+      });
+    });
+    return keys;
+  }
+  /* 指纹：项数 + 首末键，防止章节数据改动后旧码错位 */
+  function keyFingerprint(keys){
+    var n = keys.length;
+    var h = 5381;
+    for(var i=0;i<n;i+=7){ var s=keys[i]; for(var j=0;j<s.length;j++) h = ((h*33) ^ s.charCodeAt(j)) >>> 0; }
+    return n + "-" + (h % 100003);
+  }
+  /* 值压缩：0/1/2 已标，3 未标 → 每项 1 字符 */
+  function packChecks(){
+    var keys = allCheckKeys(), out = "";
+    for(var i=0;i<keys.length;i++){
+      var v = checks[keys[i]];
+      out += (v===0||v===1||v===2) ? String(v) : "3";
+    }
+    return out;
+  }
+  function unpackChecks(str, keys){
+    var out = {};
+    for(var i=0;i<keys.length && i<str.length;i++){
+      var ch = str.charAt(i);
+      if(ch==="0"||ch==="1"||ch==="2") out[keys[i]] = parseInt(ch,10);
+    }
+    return out;
+  }
+  /* 错题：按章节顺序 1 位 0/1 */
+  function allWrongKeys(){
+    var keys=[];
+    chaps().forEach(function(c){
+      (c.sections||[]).forEach(function(s,si){
+        (s.problems||[]).forEach(function(p,pi){ keys.push(c.no+"_"+si+"_"+pi); });
+      });
+    });
+    return keys;
+  }
+  function packWrong(){
+    var keys = allWrongKeys(), out="";
+    for(var i=0;i<keys.length;i++) out += wrong[keys[i]] ? "1" : "0";
+    return out;
+  }
+  function unpackWrong(str, keys){
+    var out = {};
+    for(var i=0;i<keys.length && i<str.length;i++){ if(str.charAt(i)==="1") out[keys[i]] = true; }
+    return out;
+  }
+  /* 生成同步码： v2.<指纹>.<check位串>.<wrong位串>.<校验> */
+  function makeSyncCode(){
+    var ck = allCheckKeys(), wk = allWrongKeys();
+    var body = "v2." + keyFingerprint(ck) + "." + packChecks() + "." + packWrong();
+    var sum = 0; for(var i=0;i<body.length;i++) sum = (sum*31 + body.charCodeAt(i)) >>> 0;
+    return body + "." + (sum % 99991);
+  }
+  /* 解析同步码，返回 {checks, wrong} 或 null */
+  function parseSyncCode(code){
+    var s = String(code||"").trim().replace(/\s+/g,"");
+    var m = s.match(/^v2\.(\d+-\d+)\.([0-3]*)\.([01]*)\.(\d+)$/);
+    if(!m) return null;
+    var ck = allCheckKeys(), wk = allWrongKeys();
+    if(m[1] !== keyFingerprint(ck)) return null;              // 章节数据版本不一致
+    if(m[2].length !== ck.length || m[3].length !== wk.length) return null;
+    var body = "v2." + m[1] + "." + m[2] + "." + m[3];
+    var sum = 0; for(var i=0;i<body.length;i++) sum = (sum*31 + body.charCodeAt(i)) >>> 0;
+    if(String(sum % 99991) !== m[4]) return null;             // 校验位不符 = 复制漏字
+    return { checks: unpackChecks(m[2], ck), wrong: unpackWrong(m[3], wk) };
+  }
+  /* 合并（不覆盖已有，取"更熟"的状态：2 会 > 1 半懂 > 0 不会） */
+  function mergeSync(inc){
+    var addedC = 0, addedW = 0;
+    Object.keys(inc.checks).forEach(function(k){
+      var nv = inc.checks[k], ov = checks[k];
+      if(ov === undefined){ checks[k] = nv; addedC++; }
+      else if(nv > ov){ checks[k] = nv; addedC++; }   // 只会往"更熟"升级，不会降级
+    });
+    Object.keys(inc.wrong).forEach(function(k){
+      if(!wrong[k]){ wrong[k] = true; addedW++; }
+    });
+    saveChecks(); saveWrong();
+    return { c: addedC, w: addedW };
+  }
+
+
   /* ===================== 入口：板块仪表盘 ===================== */
   function paneDash(){
     var a = allStat();
@@ -5763,11 +5884,12 @@ window.CHAPOS.push({
     h += card('data-tool="formula"', '📐', '公式手册', '全书公式，可复制、可打印', [fnN+' 张']);
     h += '</div>';
 
-    h += '<div class="dash-h"><h2>数据</h2><span class="muted">进度只存在本机 · 换设备前先导出</span></div>';
+    h += '<div class="dash-h"><h2>数据</h2><span class="muted">进度存在本机 · 多设备用同步码搬运</span></div>';
     h += '<div class="card" style="padding:14px 16px"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">'+
-         '<button class="btn primary" data-export>⬇ 导出进度</button>'+
-         '<button class="btn" data-import>⬆ 导入进度</button>'+
-         '<span class="muted" style="flex:1 1 100%;margin-top:2px">导出会下载一个 JSON 文件；换设备后用它「导入」即可恢复错题和掌握度。</span></div></div>';
+         '<button class="btn primary" data-sync>🔗 同步码（手机⇄电脑）</button>'+
+         '<button class="btn" data-export>⬇ 导出文件</button>'+
+         '<button class="btn" data-import>⬆ 导入文件</button>'+
+         '<span class="muted" style="flex:1 1 100%;margin-top:2px">日常用「同步码」最方便：复制一段短码，粘到另一台点合并。导出文件适合长期备份。</span></div></div>';
     h += '<input type="file" id="importFile" accept=".json,application/json" style="display:none">';
     return h;
   }
@@ -6524,6 +6646,79 @@ window.CHAPOS.push({
     sState.active = parseInt(act.getAttribute('data-pick'),10);
     if(act && act.scrollIntoView) act.scrollIntoView({ block:'nearest' });
   }
+  /* ===================== 同步码弹层 ===================== */
+  function openSync(){
+    var ov = document.getElementById('sync-overlay');
+    if(!ov) return;
+    ov.classList.add('on');
+    ov.setAttribute('aria-hidden','false');
+    var out = document.getElementById('sync-code-out');
+    if(out) out.value = makeSyncCode();   /* 每次打开都按当前进度重新生成 */
+    var msg = document.getElementById('sync-msg'); if(msg) msg.textContent = '';
+    var iin = document.getElementById('sync-code-in'); if(iin) iin.value = '';
+  }
+  function closeSync(){
+    var ov = document.getElementById('sync-overlay');
+    if(!ov) return;
+    ov.classList.remove('on');
+    ov.setAttribute('aria-hidden','true');
+  }
+  function bindSync(){
+    var ov   = document.getElementById('sync-overlay');
+    var gen  = document.getElementById('sync-gen');
+    var copy = document.getElementById('sync-copy');
+    var out  = document.getElementById('sync-code-out');
+    var inp  = document.getElementById('sync-code-in');
+    var apply= document.getElementById('sync-apply');
+    var paste= document.getElementById('sync-paste');
+    var msg  = document.getElementById('sync-msg');
+    if(!ov || !out || !inp) return;
+    var say = function(s, bad){ if(msg){ msg.textContent = s; msg.style.color = bad ? 'var(--red)' : 'var(--green)'; } };
+
+    ov.addEventListener('click', function(e){ if(e.target===ov) closeSync(); });
+    var xb = document.getElementById('sync-close'); if(xb) xb.addEventListener('click', closeSync);
+
+    gen.addEventListener('click', function(){
+      out.value = makeSyncCode();
+      say('已生成。复制后到另一台设备粘贴即可。');
+      out.select();
+    });
+
+    copy.addEventListener('click', function(){
+      if(!out.value.trim()) out.value = makeSyncCode();
+      var txt = out.value;
+      var done = function(ok){
+        if(ok){ say('已复制，去另一台粘贴吧。'); }
+        else { say('复制失败，请手动长按全选复制。', true); out.select(); }
+      };
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(function(){ done(true); }).catch(function(){ done(false); });
+      } else {
+        try{ out.select(); var ok = document.execCommand('copy'); done(ok); }catch(e){ done(false); }
+      }
+    });
+
+    paste.addEventListener('click', function(){
+      if(navigator.clipboard && navigator.clipboard.readText){
+        navigator.clipboard.readText().then(function(txt){
+          inp.value = (txt||'').trim();
+          if(inp.value) say('已粘贴，点「合并到本机」。'); else say('剪贴板是空的。', true);
+        }).catch(function(){ say('浏览器不允许读剪贴板，请长按输入框手动粘贴。', true); });
+      } else {
+        say('当前环境不支持自动粘贴，请长按输入框手动粘贴。', true);
+      }
+    });
+
+    apply.addEventListener('click', function(){
+      var r = parseSyncCode(inp.value);
+      if(!r){ say('这段码不对（可能复制漏了字符），请重新复制完整的码。', true); return; }
+      var stat = mergeSync(r);
+      var totalC = Object.keys(r.checks).length, totalW = Object.keys(r.wrong).length;
+      say('合并完成：知识点更新 '+stat.c+' 条（码中共 '+totalC+' 条），错题新增 '+stat.w+' 道（码中共 '+totalW+' 道）。');
+      render();
+    });
+  }
+
   function bindSearch(){
     buildFuse();
     var ov   = document.getElementById('search-overlay');
@@ -6675,6 +6870,9 @@ window.CHAPOS.push({
     }
     if(t.closest("#toTop")){ window.scrollTo({top:0,behavior:"smooth"}); return; }
 
+    /* 同步码 */
+    if(t.closest("[data-sync]")){ openSync(); return; }
+
     /* 导出进度 */
     var exBtn = t.closest("[data-export]");
     if(exBtn){
@@ -6717,7 +6915,7 @@ window.CHAPOS.push({
   });
 
   document.addEventListener("keydown", function(ev){
-    if(ev.key === "Escape"){ closePop(); }
+    if(ev.key === "Escape"){ closePop(); closeSync(); }
     var el=ev.target; if(!el||!el.closest) return;
     var ck=el.closest(".ck");
     if(ck&&(ev.key===" "||ev.key==="Enter")){ ev.preventDefault(); ck.click(); }
@@ -6727,6 +6925,7 @@ window.CHAPOS.push({
   window.addEventListener("scroll", function(){ toTop.classList.toggle("show", window.scrollY>400); });
 
   bindSearch();
+  bindSync();
   syncSystemBarTheme();   /* 启动时把已保存主题同步给系统状态栏 */
   render();
   window.addEventListener("load", function(){ if(window.renderMathInElement) typeset(); });
