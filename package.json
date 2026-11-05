@@ -1,13 +1,13 @@
 {
   "name": "gaoshu-learning-tool",
-  "version": "1.0.0",
+  "version": "1.3.0",
   "description": "同济八版高等数学自学工具（上+下册 12 章 81 节），纯前端零依赖",
   "private": true,
   "scripts": {
     "build": "node 构建单文件版.js",
     "check": "node 检查章节范围.js",
-    "sync:android": "node 构建单文件版.js && node -e \"require('fs').copyFileSync('高数学习工具.html','www/index.html')\" && npx cap sync android",
-    "apk:debug": "cd android && gradlew assembleDebug"
+    "sync:html": "node 构建单文件版.js",
+    "apk": "bash android-app/build.sh"
   },
   "keywords": [
     "高数",
@@ -17,10 +17,5 @@
     "学习工具",
     "katex"
   ],
-  "license": "MIT",
-  "dependencies": {
-    "@capacitor/android": "^8.6.0",
-    "@capacitor/cli": "^8.6.0",
-    "@capacitor/core": "^8.6.0"
-  }
+  "license": "MIT"
 }

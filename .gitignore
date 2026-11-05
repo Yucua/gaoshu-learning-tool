@@ -6,10 +6,6 @@ _*.js
 !chapters/_gen_pinyin.js
 *.bak
 
-# 拼音库构建期工具（网站只需 pinyin.js 静态表，库本体不进仓库）
-/_py.tgz
-/package/
-
 # 系统文件
 .DS_Store
 Thumbs.db
@@ -19,19 +15,13 @@ desktop.ini
 .vscode/
 .idea/
 
-# Node
+# Node（若装过依赖；纯前端零依赖，正常不存在）
 node_modules/
-
-# Capacitor web 资源（由 高数学习工具.html 复制生成）
-www/
-
-# 部署用临时目录
-dist/
 
 # 安卓签名密钥（私钥，绝不能公开）
 *.jks
 *.keystore
 
-# APK 构建产物
+# APK 构建产物（本机 aapt2/d8/apksigner 输出，不进仓库）
 android-app/dist/
 android-app/out/

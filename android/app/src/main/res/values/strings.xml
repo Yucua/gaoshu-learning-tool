@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">高数学习工具</string>
-    <string name="title_activity_main">高数学习工具</string>
-    <string name="package_name">com.yucua.gaoshu</string>
-    <string name="custom_url_scheme">com.yucua.gaoshu</string>
-</resources>

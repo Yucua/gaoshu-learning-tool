@@ -1,63 +1,40 @@
 # 打包安卓 APK 指南
 
-本项目已经搭好了 Capacitor 安卓工程（`android/` 目录），**只要装好 JDK + Android SDK，一条命令就能出 APK**。
+本项目**不走 Gradle / Capacitor**（旧方案已移除）。APK 用 `android-app/` 里的一套轻量工具链
+（aapt2 → javac → d8 → zipalign → apksigner）一条命令出包，壳加载的是**在线地址**，
+改网页内容后只需重新出包即可，App 端无需改代码。
 
-## 一、装环境（只装一次）
+> 当前真实出包通道 = `android-app/build.sh`（产出的就是 v1.3 起在用的 APK：
+> 数学 lim 图标 + 状态栏/导航栏跟随主题）。
 
-### 1. 装 JDK 17
+## 一、本机依赖（私有，不进仓库）
 
-- 下载：<https://adoptium.net/temurin/releases/?version=17>（选 Windows x64 的 `.msi`）
-- 安装时勾选「设置 JAVA_HOME」「加入 PATH」
-
-### 2. 装 Android SDK
-
-最简单的方式是装 **Android Studio**（自带 SDK 管理）：
-
-- 下载：<https://developer.android.com/studio>
-- 首次打开会引导下载 SDK（勾选 Android SDK Platform 34 或 35 + Build-Tools + Platform-Tools）
-
-装完确认环境变量（Android Studio 一般自动配好）：
-
-```
-ANDROID_HOME  = C:\Users\<你>\AppData\Local\Android\Sdk
-JAVA_HOME     = C:\Program Files\Eclipse Adoptium\jdk-17...
-```
-
-验证：
-
-```powershell
-java -version        # 能看到 17.x 就对了
-adb version          # 能看到版本就对了
-```
+- `D:\androidtools\`：JDK17 + build-tools34（`bt/`）+ `android.jar`（platform-35）
+- `android-app/c100-release.jks`：签名密钥（`.gitignore` 已排除 `*.jks`，绝不能进仓库）
 
 ## 二、出 APK
 
-在项目根目录（`D:\小玩具\gaoshu`）的 PowerShell 里：
+在仓库根目录（`D:\小玩具\gaoshu`）的 Git Bash / PowerShell 里：
 
-```powershell
-# 1. 同步 web 资源到安卓工程（会先重新构建单文件版）
-npm run sync:android
+```bash
+# 1. 设密钥密码（只在你本机，不写进脚本）
+export KSPASS='你的密钥密码'        # PowerShell 用 $env:KSPASS='你的密钥密码'
 
-# 2. 打 debug 版 APK（最快，能直接装到自己手机）
-npm run apk:debug
+# 2. 出 APK（版本号 / 版本名 两个参数）
+bash android-app/build.sh 4 1.3
 ```
 
-打完的 APK 在：
-
-```
-android\app\build\outputs\apk\debug\app-debug.apk
-```
-
-把这个 `.apk` 文件发到安卓手机上，点开安装即可（手机需允许「安装未知来源应用」）。
+产出在 `android-app/dist/高数学习工具-v1.3.apk`。
 
 ## 三、说明
 
-- **debug 版**：直接能装能用，适合自己用、发给朋友试用。未优化、含调试信息。
-- **release 版**：要签名（`signingConfig`）+ 才能上架商店，那是更后面的事，需要 Google Play 开发者账号。
-- 改内容后要重新打包：先 `node 构建单文件版.js`，再 `npm run sync:android`，再 `npm run apk:debug`。
+- **签名与「一百件小事」同源**，同一密钥可互相覆盖升级（保持 `versionCode` 递增）。
+- 壳里 `MainActivity.java` 的 `HOME_URL` 指向在线地址，联网即用。
+- 版本号在 `android-app/AndroidManifest.xml` 的 `versionCode`/`versionName` 处也可写死，
+  但 `build.sh` 的两个参数会覆盖它，命令行传参即可。
 
 ## 四、已知限制（WebView 里）
 
 - `window.print()`（打印）在 WebView 里无效 —— 不影响其它功能。
 - 「导出进度」的下载在 WebView 里可能不弹保存框 —— 进度本就在本机，移动端用处不大。
-- 数据存 `localStorage`，卸载 App 会清空（导出/导入功能可迁移）。
+- 数据存 `localStorage`，卸载 App 会清空（同步码 / 导出导入功能可迁移）。
