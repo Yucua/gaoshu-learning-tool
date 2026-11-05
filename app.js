@@ -541,9 +541,9 @@
       var nx = col(m.id)==='L' ? 10 : 400;
       var st = chapStat(m.id);
       var pct = st.all ? Math.round(st.good*100/st.all) : 0;
-      h += '<g class="mnode" data-gotoch="'+m.id+'"><rect x="'+nx+'" y="'+(y[m.id]-16)+'" width="150" height="32" rx="8">'+
+      h += '<g class="mnode" data-gotoch="'+m.id+'"><rect x="'+nx+'" y="'+(y[m.id]-16)+'" width="150" height="32" rx="8"/>'+
            '<text x="'+(nx+75)+'" y="'+(y[m.id]-2)+'">'+m.id+'. '+m.t+'</text>'+
-           '<text class="pct" x="'+(nx+75)+'" y="'+(y[m.id]+11)+'">'+pct+'% 掌握 · '+st.pr+' 题</text></rect></g>';
+           '<text class="pct" x="'+(nx+75)+'" y="'+(y[m.id]+11)+'">'+pct+'% 掌握 · '+st.pr+' 题</text></g>';
     });
     h += '</svg>'+
       '<div class="pbar" style="margin-top:10px"><i id="kmap-bar"></i></div>'+
