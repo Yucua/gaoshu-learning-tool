@@ -6306,11 +6306,16 @@ window.CHAPOS.push({
     renderSidebar();
   }
 
-  /* 通知 APK 把系统状态栏/导航栏一起变色（普通浏览器里没有这个桥，静默跳过） */
+  /* 通知 APK 把系统状态栏/导航栏染成当前主题的背景色（普通浏览器无此桥，静默跳过） */
   function syncSystemBarTheme(){
     try{
-      var dark = document.documentElement.getAttribute("data-theme") === "dark";
-      if(window.AndroidTheme && window.AndroidTheme.setTheme) window.AndroidTheme.setTheme(dark ? "dark" : "light");
+      var bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+      if(!bg) return;
+      if(window.AndroidTheme){
+        if(window.AndroidTheme.setBarColor) window.AndroidTheme.setBarColor(bg);
+        else if(window.AndroidTheme.setTheme) window.AndroidTheme.setTheme(
+          document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
+      }
     }catch(e){}
   }
 
