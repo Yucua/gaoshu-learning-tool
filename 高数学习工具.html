@@ -6427,13 +6427,9 @@ window.CHAPOS.push({
     popOpenFor = null;
   }
   function jumpSec(idx){
-    var c = chap(view.ch); if(!c) return;
-    for(var i=0;i<(c.sections||[]).length;i++){
-      if(c.sections[i].idx === idx){
-        view.page="section"; view.si=i; view.tab="learn"; view.tool=null;
-        saveView(); closePop(); render(); window.scrollTo(0,0); return;
-      }
-    }
+    /* sec 编号形如 "5.1"：前缀是章号。跨章跳转交给 gotoSec（它带导航栈+兜底找第 0 节） */
+    var no = parseInt(String(idx||"").split(".")[0],10);
+    if(no) gotoSec(no, idx);
   }
   /* 跳转到任意章任意节（按 sec.idx 匹配），用于搜索 / 知识地图 */
   function gotoSec(no, idxStr){
