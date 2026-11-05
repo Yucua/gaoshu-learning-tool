@@ -218,9 +218,9 @@ footer{margin-top:36px;font-size:11.5px;color:var(--ink-soft);text-align:center;
         长文限宽 72ch、触控目标 >=44px
    =================================================================== */
 :root{
-  --fs-h1:21px; --fs-h2:14px; --fs-body:14px; --fs-sm:12.5px; --fs-xs:11px;
-  --lh:1.68;
-  --sp1:4px; --sp2:8px; --sp3:12px; --sp4:16px; --sp5:20px; --sp6:28px;
+  --fs-h1:22px; --fs-h2:15px; --fs-body:15px; --fs-sm:13px; --fs-xs:11px;
+  --lh:1.72;
+  --sp1:4px; --sp2:8px; --sp3:12px; --sp4:16px; --sp5:22px; --sp6:30px;
   --ink-3:#8A8478;
   --line-soft:#EDE5D6;
   --accent-deep:#8F3F1F;
@@ -345,8 +345,8 @@ p{margin:var(--sp2) 0;max-width:var(--measure);}
   .crumb h1{font-size:19px;}
   .card{padding:12px 13px;}
   .dcard{padding:12px 13px;}
-  .why,.analogy,.keypoint,.pitfall{font-size:13.5px;padding:9px 12px;}
-  .prob .stem{font-size:14px;}
+  .why,.analogy,.keypoint,.pitfall{font-size:14.5px;padding:10px 13px;}
+  .prob .stem{font-size:14.5px;}
   .tabbar{padding-top:8px;}
   .tabs{gap:5px;}
   .tab{padding:7px 12px;}
@@ -425,6 +425,11 @@ p{margin:var(--sp2) 0;max-width:var(--measure);}
 :root[data-theme="dark"] .analogy, :root[data-theme="dark"] .sres-item.active{border-color:#4a3b2a;}
 :root[data-theme="dark"] .figure, :root[data-theme="dark"] .step-chain{background:#1f1d18;}
 :root[data-theme="dark"] .dcard.primary{background:linear-gradient(180deg,#242219,#2a2418);}
+/* 暗色：把硬编码暖色/阴影纳入主题（#pop 弹卡、搜索蒙层与面板、术语点状底） */
+:root[data-theme="dark"] #pop{box-shadow:0 10px 30px rgba(0,0,0,.6);}
+:root[data-theme="dark"] .search-overlay{background:rgba(0,0,0,.62);}
+:root[data-theme="dark"] .search-panel{box-shadow:0 18px 50px rgba(0,0,0,.6);}
+:root[data-theme="dark"] .term{background:rgba(224,137,79,.1);}
 
 /* ===== 全局搜索弹层（Spotlight 式，Ctrl+K / 顶部图标） ===== */
 .search-fab{position:fixed;left:50%;transform:translateX(-50%);bottom:76px;z-index:60;width:46px;height:46px;border-radius:50%;
