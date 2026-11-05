@@ -771,7 +771,6 @@
     typeset();
     closePop();
     markTerms(main);
-    bindTools(main);
     if(view.page==="tool" && view.tool==="test") startTimer();
   }
 
