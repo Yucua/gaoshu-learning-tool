@@ -367,8 +367,8 @@ p{margin:var(--sp2) 0;max-width:var(--measure);}
   .crumb .ix{font-size:11.5px;}
   .backrow{padding:2px 0 0;}
   .card{margin:6px 0;}
-  /* 桌面宽：侧栏收窄并取消 sticky 浮动（横屏高度短，侧栏浮动会盖住内容卡片） */
-  .sidebar{width:192px;flex:0 0 192px;position:static;max-height:none;z-index:auto;padding:8px 10px 20px;}
+  /* 横屏取消 sticky 浮动（高度短，浮动侧栏会盖住内容卡片）；宽度只在桌面宽另设 */
+  .sidebar{position:static;max-height:none;z-index:auto;}
   .brand{font-size:14px;margin:2px 4px;}
   .brand small{font-size:10.5px;}
   .sitem{padding:4px 8px;}
@@ -378,7 +378,11 @@ p{margin:var(--sp2) 0;max-width:var(--measure);}
   .mobnav button .mi{font-size:13px;}
   .content{padding-bottom:76px!important;}
   .toTop{bottom:56px;width:32px;height:32px;font-size:14px;}
-  .search-fab{bottom:56px;width:38px;height:38px;font-size:15px;}
+}
+/* 桌面宽横屏：侧栏收窄让横向空间 */
+@media (orientation:landscape) and (max-height:780px) and (min-width:851px){
+  .sidebar{width:192px;flex:0 0 192px;padding:8px 10px 20px;}
+  .brand small{font-size:10.5px;}
 }
 /* 手机横屏（仍走移动布局）：顶栏行压扁，但保留 wrap，目录列表独占整行 */
 @media (orientation:landscape) and (max-height:780px) and (max-width:850px){
@@ -388,13 +392,13 @@ p{margin:var(--sp2) 0;max-width:var(--measure);}
   .sidebar .brand{order:2;font-size:13px;flex:1 1 0%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .sidebar .side-theme-row{order:3;flex:0 0 auto;margin:0;gap:3px;}
   .sidebar .side-theme-row .sitem{padding:3px 7px;min-width:0;}
-  /* 目录列表独占后续整行（覆盖基础布局的 flex:1 1 100%，避免被 nowrap 挤成 1 字宽） */
+  /* 目录列表独占后续整行（覆盖基础布局的 flex:1 1 100%，避免被挤成 1 字宽） */
   .sidebar .side-sub,.sidebar .side-chaps{flex:1 1 100%;order:4;}
-  .sidebar .side-chaps{display:grid;grid-template-columns:1fr;margin-top:3px;}
+  /* 关键：只在展开时才显示（不能无条件 display:grid，否则默认就把目录全铺开把内容顶下去） */
+  .sidebar.open .side-chaps{display:grid;grid-template-columns:1fr;margin-top:3px;}
   .dash-h{margin:8px 0 0;}
   .dash{gap:7px;margin-top:7px;}
   .dcard{padding:9px 11px;}
-  .search-fab{bottom:56px;width:38px;height:38px;font-size:15px;}
 }
 
 /* ===== 深色主题：只换变量，结构不动 ===== */
@@ -421,6 +425,10 @@ p{margin:var(--sp2) 0;max-width:var(--measure);}
   border:1px solid var(--line);background:var(--paper);color:var(--accent);font-size:18px;cursor:pointer;
   box-shadow:var(--sh-3);display:none;align-items:center;justify-content:center;}
 @media (max-width:850px){ .search-fab{display:flex;} .search-fab{bottom:76px;} }
+/* 横屏：搜索钮从左中挪到右下，避免压住内容（放基础规则之后才能生效） */
+@media (orientation:landscape) and (max-height:780px){
+  .search-fab{left:auto;right:18px;transform:none;bottom:96px;width:38px;height:38px;font-size:15px;}
+}
 .search-overlay{position:fixed;inset:0;z-index:90;background:rgba(30,22,10,.45);backdrop-filter:blur(3px);display:none;}
 .search-overlay.on{display:block;}
 .search-panel{position:relative;margin:0 auto;max-width:620px;width:calc(100% - 28px);height:min(560px,80vh);
