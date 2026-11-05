@@ -146,9 +146,8 @@
       '<h1 style="font-size:24px;margin:2px 0 4px">学习面板</h1>'+
       '<div class="muted" style="font-size:13px">共 '+a.all+' 个知识点 · 已掌握 '+a.good+' · 错题 '+a.wrong+' · 待补 '+(a.bad+a.half)+'</div>'+
       '<div class="pbar" style="margin-top:10px"><i style="width:'+(a.all?Math.round(a.good*100/a.all):0)+'%"></i></div>'+
-      '<div class="search-wrap"><div class="search"><input id="gsearch" type="text" placeholder="🔍 搜概念 / 公式 / 题 / 章节（全书 12 章通查）" autocomplete="off"></div>'+
-      '<div class="search-hint">按 Enter 搜 · 结果直接跳到对应章节</div>'+
-      '<div class="sres" id="sresults"></div></div></div>';
+      '<button data-open-search class="dcard" style="width:100%;margin-top:12px;align-items:center;gap:10px"><span class="ic">🔍</span>'+
+      '<span class="nm">搜索全书</span><span class="ds">概念 / 公式 / 题 / 章节通查 · 支持拼音和打错字</span><span class="badge">Ctrl K</span></button></div>';
 
     h += '<div class="dash-h"><h2>开始学</h2><span class="muted">按顺序推进</span></div>';
     h += '<div class="dash">';
@@ -776,87 +775,6 @@
     if(view.page==="tool" && view.tool==="test") startTimer();
   }
 
-  /* ===================== 搜索 + 知识地图：DOM 绑定 ===================== */
-  var SEARCH_INDEX = null;
-  function buildSearchIndex(){
-    var idx = [];
-    chaps().forEach(function(c){
-      (c.sections||[]).forEach(function(s,si){
-        var texts = [];
-        (s.explain||[]).forEach(function(e){ texts.push(e.analogy,e.points,e.text,e.pitfall,e.chain); });
-        (s.problems||[]).forEach(function(p){ texts.push(p.stem,p.kpt); });
-        (s.worked||[]).forEach(function(w){ texts.push(w.stem,w.take); });
-        (s.quickCheck||[]).forEach(function(q){ texts.push(q.q,q.a); });
-        (s.formulas||[]).forEach(function(f){ texts.push(f.latex,f.from,f.uses,f.pit); });
-        idx.push({ kind:'sec', no:c.no, si:si, idx:s.idx, title:s.title,
-          text:(c.title+' '+s.title+' '+(s.why||'')+' '+texts.join(' ')).replace(/\$/g,''),
-          href:'no='+c.no+'&si='+si });
-      });
-    });
-    (window.GLOSSARY||[]).forEach(function(g){
-      idx.push({ kind:'term', no:g.intro, sec:g.sec, title:g.name,
-        text:((g.one||'')+' '+(g.ana||'')+' '+(g.pit||'')).replace(/\$/g,''), href:null });
-    });
-    return idx;
-  }
-  function getSearchIndex(){ if(!SEARCH_INDEX) SEARCH_INDEX = buildSearchIndex(); return SEARCH_INDEX; }
-
-  function doSearch(q){
-    var box = document.getElementById('sresults'); if(!box) return;
-    q = (q||'').trim().toLowerCase();
-    if(!q){ box.innerHTML=''; return; }
-    var hits = getSearchIndex().filter(function(it){
-      return it.title.toLowerCase().indexOf(q)>=0 || it.text.toLowerCase().indexOf(q)>=0;
-    }).slice(0, 30);
-    if(!hits.length){ box.innerHTML = '<div class="sres-empty">没找到「'+esc(q)+'」——试试别的词，或去「📚 章节目录」翻。</div>'; return; }
-    var hl = function(s){ var re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'); return esc(s).replace(re, function(m){ return '<mark>'+esc(m)+'</mark>'; }); };
-    var h = '';
-    var secHits = hits.filter(function(x){ return x.kind==='sec'; });
-    var termHits = hits.filter(function(x){ return x.kind==='term'; });
-    if(secHits.length){
-      h += '<div class="sres-g">章节 · 小节（'+secHits.length+'）</div>';
-      secHits.forEach(function(x){
-        h += '<div class="sres-item" data-gosearchsec="'+x.no+'" data-gosearchsi="'+x.si+'">'+
-             '<span class="h">第'+x.no+'章 · '+hl(x.idx+' '+x.title)+'</span>'+
-             '<span class="s">'+esc(x.text.slice(0,80))+'</span></div>';
-      });
-    }
-    if(termHits.length){
-      h += '<div class="sres-g">术语卡（'+termHits.length+'）</div>';
-      termHits.slice(0,12).forEach(function(x){
-        h += '<div class="sres-item" data-gosearchterm="'+esc(x.no)+'" data-gosearchtsec="'+esc(x.sec||'')+'">'+
-             '<span class="h">📖 '+hl(x.title)+'</span>'+
-             '<span class="s">'+esc(x.text.slice(0,70))+'</span></div>';
-      });
-    }
-    box.innerHTML = h;
-  }
-
-  function bindTools(root){
-    /* 搜索（面板首页） */
-    var si = root.querySelector('#gsearch');
-    if(si && si.dataset.bound !== '1'){
-      si.dataset.bound = '1';
-      var tmr;
-      si.addEventListener('input', function(){ clearTimeout(tmr); var v=si.value; tmr=setTimeout(function(){ doSearch(v); }, 200); });
-      si.addEventListener('keydown', function(e){ if(e.key==='Enter'){ clearTimeout(tmr); doSearch(si.value); } });
-      si.addEventListener('focus', function(){ if(si.value) doSearch(si.value); });
-    }
-    /* 搜索结果跳转 */
-    root.querySelectorAll('[data-gosearchsec]').forEach(function(el){
-      el.addEventListener('click', function(){
-        var no = el.getAttribute('data-gosearchsec');
-        var si = parseInt(el.getAttribute('data-gosearchsi')||'0', 10);
-        gotoChapterSec(no, si);
-      });
-    });
-    root.querySelectorAll('[data-gosearchterm]').forEach(function(el){
-      el.addEventListener('click', function(){
-        var no = el.getAttribute('data-gosearchterm');
-        gotoChapterSec(no);
-      });
-    });
-  }
   /* 跳转到某章（可指定节 si） */
   function gotoChapterSec(no, si){
     pushNav();
@@ -867,6 +785,183 @@
     }
     saveView(); closePop(); render(); window.scrollTo(0,0);
   }
+
+  /* ===================== 全局搜索（Spotlight 弹层 + Fuse 模糊 + 拼音 + 键盘） ===================== */
+  var FUSE = null;
+  function buildFuse(){
+    if(FUSE) return FUSE;
+    var docs = [];
+    /* 每节：标题（含章名）+ 正文全文 */
+    chaps().forEach(function(c){
+      (c.sections||[]).forEach(function(s,si){
+        var texts = [];
+        (s.explain||[]).forEach(function(e){ texts.push(e.analogy,e.points,e.text,e.pitfall,e.chain); });
+        (s.problems||[]).forEach(function(p){ texts.push(p.stem,p.kpt,p.tip); });
+        (s.worked||[]).forEach(function(w){ texts.push(w.stem,w.take); });
+        (s.quickCheck||[]).forEach(function(q){ texts.push(q.q,q.a); });
+        (s.formulas||[]).forEach(function(f){ texts.push(f.from,f.uses,f.pit); });
+        var head = '第'+c.no+'章 '+c.title+' '+s.idx+' '+s.title;
+        var body = ((s.why||'')+' '+texts.join(' ')).replace(/\$/g,'');
+        docs.push({ _kind:'sec', _no:c.no, _si:si, _idx:s.idx, _title:head,
+          _body:body, _py: pyFirst(head), _pyf: pyFull(head), _label:'📖 '+(c.no+' '+s.title) });
+      });
+    });
+    /* 术语卡 */
+    (window.GLOSSARY||[]).forEach(function(g){
+      var head = g.name;
+      var body = ((g.one||'')+' '+(g.ana||'')+' '+(g.pit||'')).replace(/\$/g,'');
+      docs.push({ _kind:'term', _no:String(g.intro), _sec:g.sec, _title:head,
+        _body:body, _py: pyFirst(head), _pyf: pyFull(head), _label:'📇 '+(head) });
+    });
+    window.__rawDocs = docs;
+    if(window.Fuse){
+      FUSE = new window.Fuse(docs, {
+        keys: [ {name:'_title', weight:3}, {name:'_py', weight:1.5}, {name:'_pyf', weight:1.5}, {name:'_body', weight:1} ],
+        threshold: 0.35, minMatchCharLength: 1, ignoreLocation: true, includeScore: true
+      });
+    }
+    return FUSE;
+  }
+  /* 中文标题 → 全拼（PINYIN_FULL 是 汉字→全拼 表；_pyf 存全拼、_py 存首字母） */
+  function pyFull(s){
+    var T = window.PINYIN_FULL || {};
+    return String(s||'').replace(/[\u4e00-\u9fa5]/g, function(ch){ return T[ch]||''; });
+  }
+  function pyFirst(s){ /* 首字母串：每个汉字取它全拼的首字母，如 洛必达→lbd */
+    var T = window.PINYIN_FULL || {};
+    return String(s||'').replace(/[\u4e00-\u9fa5]/g, function(ch){
+      var p = T[ch]||'';
+      return p.charAt(0)||'';
+    });
+  }
+
+  var sState = { list: [], active: 0, q: '' };
+  function sOpen(){
+    var ov = document.getElementById('search-overlay'); if(!ov) return;
+    ov.classList.add('on'); ov.setAttribute('aria-hidden','false');
+    var inp = document.getElementById('search-input');
+    if(inp){ setTimeout(function(){ inp.focus(); }, 30); }
+  }
+  function sClose(){
+    var ov = document.getElementById('search-overlay'); if(!ov) return;
+    ov.classList.remove('on'); ov.setAttribute('aria-hidden','true');
+    sState.list = []; sState.active = 0; sState.q = '';
+  }
+  function sDoSearch(raw){
+    var q = (raw||'').trim();
+    sState.q = q;
+    var stat = document.getElementById('search-stat');
+    var box  = document.getElementById('search-list');
+    if(!box) return;
+    if(!q){ sState.list=[]; sState.active=0;
+      if(stat) stat.textContent='输入关键词，跨 12 章 81 节 + 80 张术语卡，拼音 / 打错字也能中。';
+      box.innerHTML=''; return; }
+    var t0 = (window.performance&&performance.now)?performance.now():Date.now();
+    var hits = [];
+    if(FUSE){
+      hits = FUSE.search(q, { limit: 60 });
+    }else{ /* 兜底：无 Fuse 时退回子串 */
+      var low = q.toLowerCase();
+      hits = getRawDocs().filter(function(d){
+        return d._title.toLowerCase().indexOf(low)>=0 || d._py.indexOf(low)>=0 || d._pyf.indexOf(low)>=0 || d._body.toLowerCase().indexOf(low)>=0;
+      }).map(function(d){ return { item:d, score:0 }; });
+    }
+    var t1 = (window.performance&&performance.now)?performance.now():Date.now();
+    /* 按组展示，但记住每项在原结果(sState.list)里的下标 */
+    var secHits = [], termHits = [];
+    hits.forEach(function(x, oi){ if(x.item._kind==='sec') secHits.push([oi,x.item]); else termHits.push([oi,x.item]); });
+    var ms = Math.round(t1-t0);
+    if(stat) stat.textContent = '命中 '+(hits.length)+' 条 · 用时 '+ms+' ms';
+    sState.list = hits; sState.active = 0;
+    if(!hits.length){
+      box.innerHTML = '<div class="sres-empty">没找到「'+esc(q)+'」<br>换个词，或试拼音首字母（如 df / djf）。</div>';
+      return;
+    }
+    var hl = function(s){
+      var safe = q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      var re = new RegExp(safe,'gi');
+      return esc(s).replace(re, function(m){ return '<mark>'+esc(m)+'</mark>'; });
+    };
+    var h = '';
+    if(secHits.length){
+      h += '<div class="sres-g">章节 · 小节（'+secHits.length+'）</div>';
+      secHits.slice(0,8).forEach(function(p, i){
+        h += '<div class="sres-item'+(i===0&&termHits.length===0?' active':'')+'" data-pick="'+p[0]+'">'+
+             '<span class="kind">节</span><span class="h">'+hl(p[1]._title)+'</span>'+
+             '<span class="s">'+esc(p[1]._body.slice(0,80))+'</span></div>';
+      });
+      if(secHits.length>8) h += '<div class="muted" style="text-align:center;padding:6px;font-size:11px">还有 '+(secHits.length-8)+' 条，输入更精确的词再筛</div>';
+    }
+    if(termHits.length){
+      h += '<div class="sres-g">术语卡（'+termHits.length+'）</div>';
+      termHits.slice(0,8).forEach(function(p, i){
+        h += '<div class="sres-item'+(i===0&&secHits.length===0?' active':'')+'" data-pick="'+p[0]+'">'+
+             '<span class="kind">卡</span><span class="h">'+hl('📇 '+p[1]._title)+'</span>'+
+             '<span class="s">'+esc(p[1]._body.slice(0,70))+'</span></div>';
+      });
+      if(termHits.length>8) h += '<div class="muted" style="text-align:center;padding:6px;font-size:11px">还有 '+(termHits.length-8)+' 条</div>';
+    }
+    box.innerHTML = h;
+    box.scrollTop = 0;
+  }
+  function getRawDocs(){ /* 兜底用，复用 buildFuse 建好的全量索引 */
+    buildFuse();
+    return window.__rawDocs || [];
+  }
+  function sPick(i){
+    var hit = sState.list[i]; if(!hit) return;
+    var d = hit.item;
+    sClose();
+    if(d._kind==='sec') gotoChapterSec(d._no, d._si);
+    else gotoChapterSec(d._no);
+  }
+  function sMove(dir){
+    var box = document.getElementById('search-list'); if(!box) return;
+    var items = Array.prototype.slice.call(box.querySelectorAll('.sres-item'));
+    if(!items.length) return;
+    /* 找当前 active 在渲染项里的位置 */
+    var cur = 0;
+    for(var i=0;i<items.length;i++){ if(items[i].classList.contains('active')){ cur=i; break; } }
+    cur = (cur + dir + items.length) % items.length;
+    items.forEach(function(el,i){ el.classList.toggle('active', i===cur); });
+    var act = items[cur];
+    sState.active = parseInt(act.getAttribute('data-pick'),10);
+    if(act && act.scrollIntoView) act.scrollIntoView({ block:'nearest' });
+  }
+  function bindSearch(){
+    buildFuse();
+    var ov   = document.getElementById('search-overlay');
+    var inp  = document.getElementById('search-input');
+    var list = document.getElementById('search-list');
+    if(!ov||!inp) return;
+    var tmr;
+    inp.addEventListener('input', function(){ clearTimeout(tmr); var v=inp.value; tmr=setTimeout(function(){ sDoSearch(v); },120); });
+    inp.addEventListener('keydown', function(e){
+      if(e.key==='ArrowDown'){ e.preventDefault(); sMove(1); }
+      else if(e.key==='ArrowUp'){ e.preventDefault(); sMove(-1); }
+      else if(e.key==='Enter'){ e.preventDefault(); sPick(sState.active); }
+    });
+    ov.addEventListener('click', function(e){ if(e.target===ov) sClose(); });
+    var closeBtn = document.getElementById('search-close');
+    if(closeBtn) closeBtn.addEventListener('click', sClose);
+    if(list) list.addEventListener('click', function(e){
+      var it = e.target.closest('.sres-item');
+      if(it) sPick(parseInt(it.getAttribute('data-pick'),10));
+    });
+    /* 打开入口 */
+    document.addEventListener('click', function(e){
+      if(e.target.closest('[data-open-search]')){ sOpen(); return; }
+      if(e.target.closest('[data-close-search]')){ sClose(); }
+    });
+    /* 快捷键：Ctrl/Cmd+K 或 /（非输入框时） */
+    document.addEventListener('keydown', function(e){
+      var inField = e.target && (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.isContentEditable);
+      if((e.key==='k'||e.key==='K') && (e.ctrlKey||e.metaKey)){ e.preventDefault(); sOpen(); }
+      else if(e.key==='/' && !inField && !ov.classList.contains('on')){ e.preventDefault(); sOpen(); }
+      else if(e.key==='Escape' && ov.classList.contains('on')){ sClose(); }
+    });
+  }
+
 
   function startTimer(){
     if(quiz.timer) clearInterval(quiz.timer);
@@ -1028,6 +1123,7 @@
   var toTop=document.getElementById("toTop");
   window.addEventListener("scroll", function(){ toTop.classList.toggle("show", window.scrollY>400); });
 
+  bindSearch();
   render();
   window.addEventListener("load", function(){ if(window.renderMathInElement) typeset(); });
 })();

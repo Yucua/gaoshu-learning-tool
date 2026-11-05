@@ -2,7 +2,13 @@
 _t*.html
 _t*.png
 _*.js
+# 但保留：拼音表生成器（pinyin.js 的来源，表头注释引用它）
+!chapters/_gen_pinyin.js
 *.bak
+
+# 拼音库构建期工具（网站只需 pinyin.js 静态表，库本体不进仓库）
+/_py.tgz
+/package/
 
 # 系统文件
 .DS_Store

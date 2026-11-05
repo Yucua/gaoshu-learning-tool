@@ -18,6 +18,8 @@ const ch10 = fs.readFileSync(path + "/chapters/ch10.js", "utf8");
 const ch11 = fs.readFileSync(path + "/chapters/ch11.js", "utf8");
 const ch12 = fs.readFileSync(path + "/chapters/ch12.js", "utf8");
 const app  = fs.readFileSync(path + "/app.js", "utf8");
+const pinyin = fs.readFileSync(path + "/pinyin.js", "utf8");
+const fuse = fs.readFileSync(path + "/vendor/fuse/fuse.min.js", "utf8");
 
 /* ---------- 1) KaTeX CSS：把 fonts/*.woff2 转成 base64 内联 ---------- */
 let kcss = fs.readFileSync(path + "/vendor/katex/katex.min.css", "utf8");
@@ -44,25 +46,29 @@ function inlineScript(src) {
 const tagKcss  = '<link rel="stylesheet" href="vendor/katex/katex.min.css" />';
 const tagKjs   = '<script defer src="vendor/katex/katex.min.js"></script>';
 const tagAuto  = '<script defer src="vendor/katex/contrib/auto-render.min.js"></script>';
-const tagCh1   = '<script src="chapters/ch1.js?v=7"></script>';
-const tagCh2   = '<script src="chapters/ch2.js?v=7"></script>';
-const tagCh3   = '<script src="chapters/ch3.js?v=7"></script>';
-const tagCh4   = '<script src="chapters/ch4.js?v=7"></script>';
-const tagCh5   = '<script src="chapters/ch5.js?v=7"></script>';
-const tagCh6   = '<script src="chapters/ch6.js?v=7"></script>';
-const tagCh7   = '<script src="chapters/ch7.js?v=7"></script>';
-const tagCh8   = '<script src="chapters/ch8.js?v=7"></script>';
-const tagCh9   = '<script src="chapters/ch9.js?v=7"></script>';
-const tagCh10  = '<script src="chapters/ch10.js?v=7"></script>';
-const tagCh11  = '<script src="chapters/ch11.js?v=7"></script>';
-const tagCh12  = '<script src="chapters/ch12.js?v=7"></script>';
-const tagApp   = '<script src="app.js?v=7"></script>';
-const tagGloss = '<script src="glossary.js?v=7"></script>';
+const tagCh1   = '<script src="chapters/ch1.js?v=8"></script>';
+const tagCh2   = '<script src="chapters/ch2.js?v=8"></script>';
+const tagCh3   = '<script src="chapters/ch3.js?v=8"></script>';
+const tagCh4   = '<script src="chapters/ch4.js?v=8"></script>';
+const tagCh5   = '<script src="chapters/ch5.js?v=8"></script>';
+const tagCh6   = '<script src="chapters/ch6.js?v=8"></script>';
+const tagCh7   = '<script src="chapters/ch7.js?v=8"></script>';
+const tagCh8   = '<script src="chapters/ch8.js?v=8"></script>';
+const tagCh9   = '<script src="chapters/ch9.js?v=8"></script>';
+const tagCh10  = '<script src="chapters/ch10.js?v=8"></script>';
+const tagCh11  = '<script src="chapters/ch11.js?v=8"></script>';
+const tagCh12  = '<script src="chapters/ch12.js?v=8"></script>';
+const tagApp   = '<script src="app.js?v=8"></script>';
+const tagGloss = '<script src="glossary.js?v=8"></script>';
+const tagPinyin = '<script src="pinyin.js?v=8"></script>';
+const tagFuse   = '<script defer src="vendor/fuse/fuse.min.js"></script>';
 
 [["css", tagKcss, "<style>\n" + kcss + "\n</style>"],
  ["kjs", tagKjs, inlineScript(katexJs)],
  ["auto", tagAuto, inlineScript(autoJs)],
  ["gloss", tagGloss, inlineScript(gloss)],
+ ["pinyin", tagPinyin, inlineScript(pinyin)],
+ ["fuse", tagFuse, inlineScript(fuse)],
  ["ch1", tagCh1, inlineScript(ch1)],
  ["ch2", tagCh2, inlineScript(ch2)],
  ["ch3", tagCh3, inlineScript(ch3)],
