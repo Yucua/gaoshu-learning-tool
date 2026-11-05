@@ -21,3 +21,11 @@ www/
 
 # 部署用临时目录
 dist/
+
+# 安卓签名密钥（私钥，绝不能公开）
+*.jks
+*.keystore
+
+# APK 构建产物
+android-app/dist/
+android-app/out/

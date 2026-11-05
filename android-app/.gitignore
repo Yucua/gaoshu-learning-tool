@@ -1,0 +1,11 @@
+# 签名密钥（私钥，绝不能公开）
+*.jks
+*.keystore
+
+# 构建产物
+dist/
+out/
+
+# 系统文件
+.DS_Store
+Thumbs.db
