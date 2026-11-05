@@ -6019,29 +6019,24 @@ window.CHAPOS.push({
       ['1','2'],['2','3'],['2','4'],['4','5'],['5','6'],['2','7'],['4','7'],['3','12'],
       ['1','8'],['8','9'],['9','10'],['8','11'],['9','11'],['10','11'],['5','12']
     ];
-    var n = MAP.length, GAP = 46, Y0 = 26;
-    var y = {}; MAP.forEach(function(m,i){ y[m.id] = Y0 + i*GAP; });
-    /* 左列（1-7）矩形 x:10..160（中心85），右列（8-12）矩形 x:400..550（中心475），画布宽 560 */
-    var col = function(id){ return parseInt(id,10) <= 7 ? 'L' : 'R'; };
-    var edgeX = function(id){ return col(id)==='L' ? 85 : 475; };       /* 同列纵线走中心 */
-    var endX  = function(id, other){
-      if(col(id)===col(other)) return edgeX(id);
-      return col(id)==='L' ? 160 : 400;                                  /* 跨列横线走矩形侧边 */
-    };
-    var W = 560, H = Y0 + n*GAP + 20;
+    /* 手机友好：单列自上而下（学序 1→12），依赖线走右侧肘形通道，宽度按需展开 */
+    var Y0 = 30, GAP = 48, BOX_W = 160, BOX_X = 60;
+    var yc = {}; MAP.forEach(function(m,i){ yc[m.id] = Y0 + i*GAP + 17; });
+    var W = 336, H = Y0 + 11*GAP + 17 + 14;
     var h = '<div class="card"><div class="zone" style="margin-top:8px"><h2>知识地图 <span class="muted">12 章依赖关系 · 点节点进章</span></h2></div>'+
-      '<div class="muted" style="font-size:11.5px;margin:4px 0 6px">左列 = 一元微积分主线（1→7、12），右列 = 空间/多元分支（8→11、12）。悬停看关联，点击跳章。</div>'+
+      '<div class="muted" style="font-size:11.5px;margin:4px 0 6px">自上而下就是学习顺序；右侧的线 = 前置依赖。悬停看关联，点击跳章。</div>'+
       '<svg class="mapbox" id="kmap" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
-    EDGES.forEach(function(e){
-      h += '<line data-from="'+e[0]+'" data-to="'+e[1]+'" x1="'+endX(e[0],e[1])+'" y1="'+y[e[0]]+'" x2="'+endX(e[1],e[0])+'" y2="'+y[e[1]]+'"/>';
+    EDGES.forEach(function(e,ei){
+      var xb = 240 + ei*5;  /* 每条线一个 x 通道，避免叠在一起 */
+      var p = BOX_X + BOX_W + ',' + yc[e[0]] + ' ' + xb + ',' + yc[e[0]] + ' ' + xb + ',' + yc[e[1]] + ' ' + (BOX_X+BOX_W) + ',' + yc[e[1]];
+      h += '<polyline data-from="'+e[0]+'" data-to="'+e[1]+'" points="'+p+'"/>';
     });
     MAP.forEach(function(m,i){
-      var nx = col(m.id)==='L' ? 10 : 400;
       var st = chapStat(m.id);
       var pct = st.all ? Math.round(st.good*100/st.all) : 0;
-      h += '<g class="mnode" data-gotoch="'+m.id+'"><rect x="'+nx+'" y="'+(y[m.id]-16)+'" width="150" height="32" rx="8"/>'+
-           '<text x="'+(nx+75)+'" y="'+(y[m.id]-2)+'">'+m.id+'. '+m.t+'</text>'+
-           '<text class="pct" x="'+(nx+75)+'" y="'+(y[m.id]+11)+'">'+pct+'% 掌握 · '+st.pr+' 题</text></g>';
+      h += '<g class="mnode" data-gotoch="'+m.id+'"><rect x="'+BOX_X+'" y="'+(yc[m.id]-17)+'" width="'+BOX_W+'" height="34" rx="8"/>'+
+           '<text x="'+(BOX_X+BOX_W/2)+'" y="'+(yc[m.id]-2)+'">'+m.id+'. '+m.t+'</text>'+
+           '<text class="pct" x="'+(BOX_X+BOX_W/2)+'" y="'+(yc[m.id]+11)+'">'+pct+'% 掌握 · '+st.pr+' 题</text></g>';
     });
     h += '</svg>'+
       '<div class="pbar" style="margin-top:10px"><i id="kmap-bar"></i></div>'+
@@ -6140,6 +6135,9 @@ window.CHAPOS.push({
       acceptNode: function(node){
         var p = node.parentNode;
         if(!p) return NodeFilter.FILTER_REJECT;
+        /* SVG（知识地图等）里的文字不参与术语标记，插 span 会渲染坏 */
+        var nsu = p.namespaceURI;
+        if(nsu && nsu.indexOf("svg")>=0) return NodeFilter.FILTER_REJECT;
         var tag = p.nodeName ? p.nodeName.toLowerCase() : "";
         if(tag==="script"||tag==="style"||tag==="textarea"||tag==="button") return NodeFilter.FILTER_REJECT;
         if(p.closest && (p.closest(".katex")||p.closest(".term")||p.closest("#pop")||p.closest(".tabbar")||p.closest(".sitem")||p.closest(".dcard")||p.closest(".prow")||p.closest("#sidebar"))) return NodeFilter.FILTER_REJECT;
