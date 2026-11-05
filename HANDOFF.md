@@ -121,13 +121,13 @@ bash build.sh <vc> <ver>        # 例：bash build.sh 6 1.5（同时 manifest �
 | 图标 | lim+箭头新图 4296B（md5 `256dbd…`），两处一致；旧占位图 22KB 已全清 | `md5sum` |
 | 壳特性 | 系统栏桥 `setBarColor`/`setTheme` + 启动 `clearCache(true)`（v1.4 加入） | `grep clearCache` = 1 |
 | 版本号机制 | **aapt2 以 manifest 为准，命令行参数无效**（manifest=99 命令行=5 → 实测产出 99） | 临时副本实测 |
-| 安全 | 签名密码已从 HANDOFF/build.sh 注释清除（历史 commit 里仍有过一次明文，见「七、已知风险」） | `grep c100journal` = 0 |
+| 安全 | 签名密码已从 HANDOFF/build.sh 注释清除（历史 commit 里仍有过一次明文，见「七、已知风险」） | 对仓库跑 `grep -rn "你的密钥密码本体"` 应 = 0（本文档不写明文，避免再扩散） |
 
 ## 五点八、v1.4 出包 + 文档全量审计（2026-11-06）
 - 在**真源 `gaoshu-app/`** 出 v1.4（vc 5）：壳加 `clearCache(true)`（只清 HTTP 缓存、不动 localStorage），修「线上发新版但手机缓存旧版顶不掉」。
 - 同步仓库 `gaoshu/android-app/`（图标/壳/manifest 三件与真源 cmp 全一致），删其 dist 遗留旧包。
 - **推翻旧结论**：「build.sh 参数覆盖 manifest」是错的——aapt2 实测 **manifest 赢**，改版本号必须改 manifest。
-- **清掉明文签名密码**：HANDOFF.md、两份 build.sh 注释里的 `c100journal` 全换占位符（git 历史里曾存在一次，见「七、已知风险」）。
+- **清掉明文签名密码**：HANDOFF.md、两份 build.sh 注释里的签名密码全换占位符（文档本身不再写明文密码本体，避免再扩散；git 历史里曾存在一次，见「七、已知风险」）。
 - `打包APK指南.md` 整篇重写（原写的是仓库内 android-app 旧通道 + 错版本号机制）。
 
 ## 七、已知风险（接手必读）
