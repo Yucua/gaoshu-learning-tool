@@ -153,7 +153,6 @@
     h += '<div class="dash-h"><h2>开始学</h2><span class="muted">按顺序推进</span></div>';
     h += '<div class="dash">';
     h += card('data-dash="chapters"', '📚', '章节目录', '按章 → 按节，进入讲解、例题与练习', [chaps().length+' 章 · '+secN+' 节', 'green'], 'primary');
-    h += card('data-tool="map"', '🗺️', '知识地图', '12 章依赖关系一图看全，点节点进章', ['谁先学谁后学']);
     h += card('data-tool="data"', '📈', '章节数据', '每章掌握度 / 公式 / 题量 / 错题，一眼对比', null);
     h += '</div>';
 
@@ -509,43 +508,6 @@
     return h;
   }
 
-  /* ===================== 工具：知识地图（12 章依赖，手搓 SVG） ===================== */
-  function toolMap(){
-    var MAP = [
-      {id:'1',t:'函数与极限'},{id:'2',t:'导数与微分'},{id:'3',t:'中值定理与应用'},
-      {id:'4',t:'不定积分'},{id:'5',t:'定积分'},{id:'6',t:'定积分应用'},
-      {id:'7',t:'微分方程'},{id:'8',t:'向量与空间几何'},{id:'9',t:'多元微分'},
-      {id:'10',t:'重积分'},{id:'11',t:'曲线曲面积分'},{id:'12',t:'无穷级数'}
-    ];
-    var EDGES = [
-      ['1','2'],['2','3'],['2','4'],['4','5'],['5','6'],['2','7'],['4','7'],['3','12'],
-      ['1','8'],['8','9'],['9','10'],['8','11'],['9','11'],['10','11'],['5','12']
-    ];
-    /* 手机友好：单列自上而下（学序 1→12），不画连线，依赖关系直接写在节点里 */
-    var prereq = {};
-    EDGES.forEach(function(e){ (prereq[e[1]] = prereq[e[1]]||[]).push(e[0]); });
-    var Y0 = 30, GAP = 48, BOX_W = 240, BOX_X = 20;
-    var yc = {}; MAP.forEach(function(m,i){ yc[m.id] = Y0 + i*GAP + 17; });
-    var W = BOX_X + BOX_W + 10, H = Y0 + 11*GAP + 34;
-    var h = '<div class="card"><div class="zone" style="margin-top:8px"><h2>知识地图 <span class="muted">12 章学习顺序 · 点节点进章</span></h2></div>'+
-      '<div class="muted" style="font-size:11.5px;margin:4px 0 6px">从上往下就是学序；「前置」= 学它之前要会的章。悬停看关联，点击跳章。</div>'+
-      '<svg class="mapbox" id="kmap" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
-    MAP.forEach(function(m,i){
-      var st = chapStat(m.id);
-      var pct = st.all ? Math.round(st.good*100/st.all) : 0;
-      var pre = prereq[m.id] || [];
-      var preTxt = pre.length ? '前置 第'+pre.join('·')+' 章' : '无前置';
-      h += '<g class="mnode" data-gotoch="'+m.id+'" data-pre="'+pre.join(",")+'">'+
-           '<rect x="'+BOX_X+'" y="'+(yc[m.id]-17)+'" width="'+BOX_W+'" height="34" rx="8"/>'+
-           '<text x="'+(BOX_X+12)+'" y="'+(yc[m.id]-1)+'" text-anchor="start">'+m.id+'. '+m.t+'</text>'+
-           '<text class="pct" x="'+(BOX_X+BOX_W-12)+'" y="'+(yc[m.id]+11)+'" text-anchor="end">'+preTxt+' · '+pct+'%</text></g>';
-    });
-    h += '</svg>'+
-      '<div class="pbar" style="margin-top:10px"><i id="kmap-bar"></i></div>'+
-      '<div class="muted" id="kmap-tip" style="font-size:12px;margin-top:4px">悬停任意节点看它的前后关系。</div></div>';
-    return h;
-  }
-
   /* ===================== 工具：章节数据图（纯 CSS 柱状） ===================== */
   function toolData(){
     var stats = chaps().map(function(c){
@@ -799,7 +761,6 @@
       else if(view.tool==="formula") h+=toolFormula();
       else if(view.tool==="examples") h+=toolExamples();
       else if(view.tool==="stats") h+=toolStats();
-      else if(view.tool==="map") h+=toolMap();
       else if(view.tool==="data") h+=toolData();
       else if(view.tool==="test") h+=toolTest();
       else h += paneDash();
@@ -895,32 +856,6 @@
         gotoChapterSec(no);
       });
     });
-    /* 知识地图：悬停高亮关联边 + 点击跳章 */
-    var map = root.querySelector('#kmap');
-    if(map){
-      var nodes = map.querySelectorAll('.mnode');
-      nodes.forEach(function(node){
-        node.addEventListener('mouseover', function(){
-          var id = node.getAttribute('data-gotoch');
-          var pres = (node.getAttribute('data-pre')||'').split(',').filter(Boolean);
-          nodes.forEach(function(nd){
-            var nid = nd.getAttribute('data-gotoch');
-            if(nid===id) return;
-            var depsOnMe = (nd.getAttribute('data-pre')||'').split(',').indexOf(id)>=0;
-            nd.classList.toggle('on', pres.indexOf(nid)>=0 || depsOnMe);
-          });
-          var st = chapStat(id); var pct = st.all?Math.round(st.good*100/st.all):0;
-          var tip = document.getElementById('kmap-tip'); if(tip) tip.innerHTML = '第'+id+'章 · 掌握 '+st.good+'/'+st.all+'（'+pct+'%）· 题 '+st.pr+' · 错题 '+st.wrong;
-        });
-        node.addEventListener('mouseleave', function(){
-          nodes.forEach(function(nd){ nd.classList.remove('on'); });
-          var tip = document.getElementById('kmap-tip'); if(tip) tip.textContent = '悬停任意节点看它的前后关系。';
-        });
-        node.addEventListener('click', function(){
-          gotoChapterSec(node.getAttribute('data-gotoch'));
-        });
-      });
-    }
   }
   /* 跳转到某章（可指定节 si） */
   function gotoChapterSec(no, si){
