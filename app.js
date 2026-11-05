@@ -3,6 +3,7 @@
   var LS_CHECK = "gaoshu_check_v3";
   var LS_WRONG = "gaoshu_wrong_v3";
   var LS_VIEW  = "gaoshu_view_v4";
+  var LS_THEME = "gaoshu_theme";
 
   var mem = {}, haveLS = false;
   try { localStorage.setItem("__t","1"); localStorage.removeItem("__t"); haveLS = true; } catch(e){}
@@ -97,7 +98,9 @@
   function renderSidebar(){
     var h = '<button class="side-toggle" data-side-toggle>☰ 目录</button>';
     h += '<div class="brand">同济高数 · 学习工具<small>学 · 练 · 测 · 复盘</small></div>';
-    h += '<div style="margin-top:10px"><button class="sitem'+(view.page==="home"?" active":"")+'" data-dash="home"><span class="no">🏠</span><span class="t">板块首页</span></button></div>';
+    h += '<div style="margin-top:10px;display:flex;gap:8px">'+
+         '<button class="sitem'+(view.page==="home"?" active":"")+'" style="flex:1" data-dash="home"><span class="no">🏠</span><span class="t">板块首页</span></button>'+
+         '<button class="sitem" data-theme-toggle style="flex:0 0 auto;justify-content:center;min-width:52px" title="切换深色/浅色"><span class="no">'+(document.documentElement.getAttribute("data-theme")==="dark"?"☀️":"🌙")+'</span></button></div>';
     h += '<div class="side-sub">章节目录</div><div class="side-chaps">';
     chaps().forEach(function(c){
       var st=chapStat(c.no);
@@ -142,11 +145,16 @@
     var h = '<div class="card" style="padding:18px 20px"><div class="ix" style="color:var(--accent);font-size:12px;font-weight:700">同济八版 · 上册</div>'+
       '<h1 style="font-size:24px;margin:2px 0 4px">学习面板</h1>'+
       '<div class="muted" style="font-size:13px">共 '+a.all+' 个知识点 · 已掌握 '+a.good+' · 错题 '+a.wrong+' · 待补 '+(a.bad+a.half)+'</div>'+
-      '<div class="pbar" style="margin-top:10px"><i style="width:'+(a.all?Math.round(a.good*100/a.all):0)+'%"></i></div></div>';
+      '<div class="pbar" style="margin-top:10px"><i style="width:'+(a.all?Math.round(a.good*100/a.all):0)+'%"></i></div>'+
+      '<div class="search-wrap"><div class="search"><input id="gsearch" type="text" placeholder="🔍 搜概念 / 公式 / 题 / 章节（全书 12 章通查）" autocomplete="off"></div>'+
+      '<div class="search-hint">按 Enter 搜 · 结果直接跳到对应章节</div>'+
+      '<div class="sres" id="sresults"></div></div></div>';
 
     h += '<div class="dash-h"><h2>开始学</h2><span class="muted">按顺序推进</span></div>';
     h += '<div class="dash">';
     h += card('data-dash="chapters"', '📚', '章节目录', '按章 → 按节，进入讲解、例题与练习', [chaps().length+' 章 · '+secN+' 节', 'green'], 'primary');
+    h += card('data-tool="map"', '🗺️', '知识地图', '12 章依赖关系一图看全，点节点进章', ['谁先学谁后学']);
+    h += card('data-tool="data"', '📈', '章节数据', '每章掌握度 / 公式 / 题量 / 错题，一眼对比', null);
     h += '</div>';
 
     h += '<div class="dash-h"><h2>复盘工具</h2><span class="muted">错题和不会的，都在这</span></div>';
@@ -501,7 +509,85 @@
     return h;
   }
 
-  /* ===================== 工具：章末自测 ===================== */
+  /* ===================== 工具：知识地图（12 章依赖，手搓 SVG） ===================== */
+  function toolMap(){
+    var MAP = [
+      {id:'1',t:'函数与极限'},{id:'2',t:'导数与微分'},{id:'3',t:'中值定理与应用'},
+      {id:'4',t:'不定积分'},{id:'5',t:'定积分'},{id:'6',t:'定积分应用'},
+      {id:'7',t:'微分方程'},{id:'8',t:'向量与空间几何'},{id:'9',t:'多元微分'},
+      {id:'10',t:'重积分'},{id:'11',t:'曲线曲面积分'},{id:'12',t:'无穷级数'}
+    ];
+    var EDGES = [
+      ['1','2'],['2','3'],['2','4'],['4','5'],['5','6'],['2','7'],['4','7'],['3','12'],
+      ['1','8'],['8','9'],['9','10'],['8','11'],['9','11'],['10','11'],['5','12']
+    ];
+    var n = MAP.length, GAP = 46, Y0 = 26;
+    var y = {}; MAP.forEach(function(m,i){ y[m.id] = Y0 + i*GAP; });
+    /* 左列（1-7）矩形 x:10..160（中心85），右列（8-12）矩形 x:400..550（中心475），画布宽 560 */
+    var col = function(id){ return parseInt(id,10) <= 7 ? 'L' : 'R'; };
+    var edgeX = function(id){ return col(id)==='L' ? 85 : 475; };       /* 同列纵线走中心 */
+    var endX  = function(id, other){
+      if(col(id)===col(other)) return edgeX(id);
+      return col(id)==='L' ? 160 : 400;                                  /* 跨列横线走矩形侧边 */
+    };
+    var W = 560, H = Y0 + n*GAP + 20;
+    var h = '<div class="card"><div class="zone" style="margin-top:8px"><h2>知识地图 <span class="muted">12 章依赖关系 · 点节点进章</span></h2></div>'+
+      '<div class="muted" style="font-size:11.5px;margin:4px 0 6px">左列 = 一元微积分主线（1→7、12），右列 = 空间/多元分支（8→11、12）。悬停看关联，点击跳章。</div>'+
+      '<svg class="mapbox" id="kmap" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
+    EDGES.forEach(function(e){
+      h += '<line data-from="'+e[0]+'" data-to="'+e[1]+'" x1="'+endX(e[0],e[1])+'" y1="'+y[e[0]]+'" x2="'+endX(e[1],e[0])+'" y2="'+y[e[1]]+'"/>';
+    });
+    MAP.forEach(function(m,i){
+      var nx = col(m.id)==='L' ? 10 : 400;
+      var st = chapStat(m.id);
+      var pct = st.all ? Math.round(st.good*100/st.all) : 0;
+      h += '<g class="mnode" data-gotoch="'+m.id+'"><rect x="'+nx+'" y="'+(y[m.id]-16)+'" width="150" height="32" rx="8">'+
+           '<text x="'+(nx+75)+'" y="'+(y[m.id]-2)+'">'+m.id+'. '+m.t+'</text>'+
+           '<text class="pct" x="'+(nx+75)+'" y="'+(y[m.id]+11)+'">'+pct+'% 掌握 · '+st.pr+' 题</text></rect></g>';
+    });
+    h += '</svg>'+
+      '<div class="pbar" style="margin-top:10px"><i id="kmap-bar"></i></div>'+
+      '<div class="muted" id="kmap-tip" style="font-size:12px;margin-top:4px">悬停任意节点看它的前后关系。</div></div>';
+    return h;
+  }
+
+  /* ===================== 工具：章节数据图（纯 CSS 柱状） ===================== */
+  function toolData(){
+    var stats = chaps().map(function(c){
+      var st = chapStat(c.no);
+      var fn = 0; (c.sections||[]).forEach(function(s){ fn += (s.formulas||[]).length; });
+      var ex = 0; (c.sections||[]).forEach(function(s){ ex += (s.worked||[]).length; });
+      return { no:c.no, title:c.title, st:st, fn:fn, ex:ex };
+    });
+    var maxF = 0; stats.forEach(function(s){ if(s.fn>maxF) maxF=s.fn; });
+    var h = '<div class="card"><div class="zone" style="margin-top:8px"><h2>章节数据 <span class="muted">12 章横向对比</span></h2></div>';
+    h += '<div class="dash-h"><h2>掌握度</h2><span class="muted">绿柱 = 已掌握比例（按掌握数/总知识点）</span></div><div class="bars">';
+    stats.forEach(function(s){
+      var pct = s.st.all ? Math.round(s.st.good*100/s.st.all) : 0;
+      h += '<div class="bar-row"><span class="lbl" title="'+esc(s.title)+'">第'+s.no+'章 · '+esc(s.title.slice(0,7))+'</span>'+
+           '<div class="bar-track"><i class="'+(s.st.bad?'':'good')+'" style="width:'+pct+'%"></i></div>'+
+           '<span class="val">'+pct+'%</span></div>';
+    });
+    h += '</div><div class="bar-legend"><span><b>红柱</b> = 该章有没懂的知识点</span><span><b>绿柱</b> = 全部掌握/半懂</span></div>';
+    h += '<div class="dash-h"><h2>内容量（公式数）</h2><span class="muted">公式密度，复习重点信号</span></div><div class="bars">';
+    stats.forEach(function(s){
+      var pct = maxF ? Math.round(s.fn*100/maxF) : 0;
+      h += '<div class="bar-row"><span class="lbl" title="'+esc(s.title)+'">第'+s.no+'章 · '+esc(s.title.slice(0,7))+'</span>'+
+           '<div class="bar-track"><i style="width:'+pct+'%"></i></div>'+
+           '<span class="val">'+s.fn+' 条</span></div>';
+    });
+    h += '</div>';
+    h += '<div class="dash-h"><h2>题量 / 错题 / 例题</h2></div><div class="bars">';
+    stats.forEach(function(s){
+      var mm = Math.max(1, Math.max.apply(null, stats.map(function(x){ return x.st.pr; })));
+      var pw = Math.round(s.st.pr*100/mm);
+      h += '<div class="bar-row"><span class="lbl" title="'+esc(s.title)+'">第'+s.no+'章 · '+esc(s.title.slice(0,7))+'</span>'+
+           '<div class="bar-track"><i style="width:'+pw+'%;background:'+(s.st.wrong?'var(--red)':'var(--blue)')+'"></i></div>'+
+           '<span class="val">'+s.st.pr+' 题'+(s.st.wrong?' · 错'+s.st.wrong:'')+'</span></div>';
+    });
+    h += '</div></div>';
+    return h;
+  }
   function buildQuiz(){
     var c=chap(view.ch), pool=[];
     (c.sections||[]).forEach(function(s,si){
@@ -658,6 +744,24 @@
       }
     }
   }
+  /* 跳转到任意章任意节（按 sec.idx 匹配），用于搜索 / 知识地图 */
+  function gotoSec(no, idxStr){
+    var c = chap(no); if(!c) return;
+    var i = 0;
+    for(i=0;i<(c.sections||[]).length;i++){ if(c.sections[i].idx === idxStr) break; }
+    if(i >= (c.sections||[]).length) i = 0;
+    pushNav();
+    view.ch = no; view.page="section"; view.si=i; view.tab="learn"; view.tool=null;
+    saveView(); closePop(); render(); window.scrollTo(0,0);
+  }
+
+  /* ===================== 深色 / 浅色 ===================== */
+  function toggleTheme(){
+    var dark = document.documentElement.getAttribute("data-theme") === "dark";
+    if(dark){ document.documentElement.removeAttribute("data-theme"); try{ localStorage.removeItem(LS_THEME); }catch(e){} }
+    else{ document.documentElement.setAttribute("data-theme","dark"); try{ localStorage.setItem(LS_THEME,"dark"); }catch(e){} }
+    renderSidebar();
+  }
 
   /* ===================== 移动端底部导航 ===================== */
   function renderMobnav(){
@@ -697,6 +801,8 @@
       else if(view.tool==="formula") h+=toolFormula();
       else if(view.tool==="examples") h+=toolExamples();
       else if(view.tool==="stats") h+=toolStats();
+      else if(view.tool==="map") h+=toolMap();
+      else if(view.tool==="data") h+=toolData();
       else if(view.tool==="test") h+=toolTest();
       else h += paneDash();
     }
@@ -707,7 +813,121 @@
     typeset();
     closePop();
     markTerms(main);
+    bindTools(main);
     if(view.page==="tool" && view.tool==="test") startTimer();
+  }
+
+  /* ===================== 搜索 + 知识地图：DOM 绑定 ===================== */
+  var SEARCH_INDEX = null;
+  function buildSearchIndex(){
+    var idx = [];
+    chaps().forEach(function(c){
+      (c.sections||[]).forEach(function(s,si){
+        var texts = [];
+        (s.explain||[]).forEach(function(e){ texts.push(e.analogy,e.points,e.text,e.pitfall,e.chain); });
+        (s.problems||[]).forEach(function(p){ texts.push(p.stem,p.kpt); });
+        (s.worked||[]).forEach(function(w){ texts.push(w.stem,w.take); });
+        (s.quickCheck||[]).forEach(function(q){ texts.push(q.q,q.a); });
+        (s.formulas||[]).forEach(function(f){ texts.push(f.latex,f.from,f.uses,f.pit); });
+        idx.push({ kind:'sec', no:c.no, si:si, idx:s.idx, title:s.title,
+          text:(c.title+' '+s.title+' '+(s.why||'')+' '+texts.join(' ')).replace(/\$/g,''),
+          href:'no='+c.no+'&si='+si });
+      });
+    });
+    (window.GLOSSARY||[]).forEach(function(g){
+      idx.push({ kind:'term', no:g.intro, sec:g.sec, title:g.name,
+        text:((g.one||'')+' '+(g.ana||'')+' '+(g.pit||'')).replace(/\$/g,''), href:null });
+    });
+    return idx;
+  }
+  function getSearchIndex(){ if(!SEARCH_INDEX) SEARCH_INDEX = buildSearchIndex(); return SEARCH_INDEX; }
+
+  function doSearch(q){
+    var box = document.getElementById('sresults'); if(!box) return;
+    q = (q||'').trim().toLowerCase();
+    if(!q){ box.innerHTML=''; return; }
+    var hits = getSearchIndex().filter(function(it){
+      return it.title.toLowerCase().indexOf(q)>=0 || it.text.toLowerCase().indexOf(q)>=0;
+    }).slice(0, 30);
+    if(!hits.length){ box.innerHTML = '<div class="sres-empty">没找到「'+esc(q)+'」——试试别的词，或去「📚 章节目录」翻。</div>'; return; }
+    var hl = function(s){ var re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'); return esc(s).replace(re, function(m){ return '<mark>'+esc(m)+'</mark>'; }); };
+    var h = '';
+    var secHits = hits.filter(function(x){ return x.kind==='sec'; });
+    var termHits = hits.filter(function(x){ return x.kind==='term'; });
+    if(secHits.length){
+      h += '<div class="sres-g">章节 · 小节（'+secHits.length+'）</div>';
+      secHits.forEach(function(x){
+        h += '<div class="sres-item" data-gosearchsec="'+x.no+'" data-gosearchsi="'+x.si+'">'+
+             '<span class="h">第'+x.no+'章 · '+hl(x.idx+' '+x.title)+'</span>'+
+             '<span class="s">'+esc(x.text.slice(0,80))+'</span></div>';
+      });
+    }
+    if(termHits.length){
+      h += '<div class="sres-g">术语卡（'+termHits.length+'）</div>';
+      termHits.slice(0,12).forEach(function(x){
+        h += '<div class="sres-item" data-gosearchterm="'+esc(x.no)+'" data-gosearchtsec="'+esc(x.sec||'')+'">'+
+             '<span class="h">📖 '+hl(x.title)+'</span>'+
+             '<span class="s">'+esc(x.text.slice(0,70))+'</span></div>';
+      });
+    }
+    box.innerHTML = h;
+  }
+
+  function bindTools(root){
+    /* 搜索（面板首页） */
+    var si = root.querySelector('#gsearch');
+    if(si && si.dataset.bound !== '1'){
+      si.dataset.bound = '1';
+      var tmr;
+      si.addEventListener('input', function(){ clearTimeout(tmr); var v=si.value; tmr=setTimeout(function(){ doSearch(v); }, 200); });
+      si.addEventListener('keydown', function(e){ if(e.key==='Enter'){ clearTimeout(tmr); doSearch(si.value); } });
+      si.addEventListener('focus', function(){ if(si.value) doSearch(si.value); });
+    }
+    /* 搜索结果跳转 */
+    root.querySelectorAll('[data-gosearchsec]').forEach(function(el){
+      el.addEventListener('click', function(){
+        var no = el.getAttribute('data-gosearchsec');
+        var si = parseInt(el.getAttribute('data-gosearchsi')||'0', 10);
+        gotoChapterSec(no, si);
+      });
+    });
+    root.querySelectorAll('[data-gosearchterm]').forEach(function(el){
+      el.addEventListener('click', function(){
+        var no = el.getAttribute('data-gosearchterm');
+        gotoChapterSec(no);
+      });
+    });
+    /* 知识地图：悬停高亮关联边 + 点击跳章 */
+    var map = root.querySelector('#kmap');
+    if(map){
+      var lines = map.querySelectorAll('line');
+      var nodes = map.querySelectorAll('.mnode');
+      nodes.forEach(function(node){
+        node.addEventListener('mouseover', function(){
+          var id = node.getAttribute('data-gotoch');
+          lines.forEach(function(ln){ if(ln.getAttribute('data-from')===id || ln.getAttribute('data-to')===id) ln.classList.add('hl'); });
+          var st = chapStat(id); var pct = st.all?Math.round(st.good*100/st.all):0;
+          var tip = document.getElementById('kmap-tip'); if(tip) tip.innerHTML = '第'+id+'章 · 掌握 '+st.good+'/'+st.all+'（'+pct+'%）· 题 '+st.pr+' · 错题 '+st.wrong;
+        });
+        node.addEventListener('mouseleave', function(){
+          lines.forEach(function(ln){ ln.classList.remove('hl'); });
+          var tip = document.getElementById('kmap-tip'); if(tip) tip.textContent = '悬停任意节点看它的前后关系。';
+        });
+        node.addEventListener('click', function(){
+          gotoChapterSec(node.getAttribute('data-gotoch'));
+        });
+      });
+    }
+  }
+  /* 跳转到某章（可指定节 si） */
+  function gotoChapterSec(no, si){
+    pushNav();
+    if(si !== undefined && si !== null){
+      view.ch = no; view.page="section"; view.si=si; view.tab="learn"; view.tool=null;
+    }else{
+      view.ch = no; view.page="chapter"; view.si=null; view.tool=null;
+    }
+    saveView(); closePop(); render(); window.scrollTo(0,0);
   }
 
   function startTimer(){
@@ -744,6 +964,8 @@
     var t=ev.target; if(!t||!t.closest) return;
 
     if(t.closest("[data-side-toggle]")){ sidebar.classList.toggle("open"); return; }
+
+    if(t.closest("[data-theme-toggle]")){ toggleTheme(); return; }
 
     /* 术语小卡 */
     var termEl = t.closest(".term");
