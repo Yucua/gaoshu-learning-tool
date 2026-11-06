@@ -136,12 +136,12 @@ bash build.sh <vc> <ver>        # 例：bash build.sh 6 1.5（同时 manifest �
 - `打包APK指南.md` 整篇重写（原写的是仓库内 android-app 旧通道 + 错版本号机制）。
 
 ## 五点九、v1.5 密钥轮换（2026-11-06）
-- 旧密钥对（`c100-release.jks`，密码曾明文进过 git 历史、公开仓库可见）→ **作废**，已备份到 `android-app/_backup/c100-release-OLD-leaked.jks`。
+- 旧密钥对（`c100-release.jks`，证书 `1f403ca6…`，密码曾明文进过 git 历史、公开仓库可见）→ **对高数弃用**（高数从 v1.5 起换新证书），但**没作废**——它同时是「一百件小事」App 的**在役签名密钥**，备份在 `android-app/_backup/c100-release-OLD-leaked.jks`，**绝不能删**（删了「一百件小事」就再也无法出包/覆盖升级）。
 - 生成新密钥对：`keytool -genkeypair -alias c100 -keyalg RSA -keysize 2048 -validity 10000 -keystore c100-release.jks -storetype PKCS12 -dname "CN=GaoshuTool, O=Yucua, C=CN"`。新密码只放本机环境变量 KSPASS（本机已 export，本文档与进 git 的文件均不写明文本体）。
 - 新证书 SHA-256 = `71fa1c68ac4b87b48259dad3562c29d604f36857536a80b28c4a07d55d993809`。
 - manifest 改到 `6 / 1.5`，重签出 `android-app/dist/高数学习工具-v1.5.apk`（vc=6，16853B，签名 SHA-256 与新证书一致，自检三件套全过）。
 - 同步仓库 `gaoshu/android-app/`：manifest + build.sh + jks（jks 仍 gitignore，不入库）。
-- **★ 用户须知**：装着 ≤v1.4（旧证书）的手机**装不了 v1.5**（同包名 + 换证书被系统拒绝）→ 先卸载旧 App 再装 v1.5。卸载会清 localStorage（学习进度/错题本/同步码全没）→ **装前先导出同步码**。此后备份的旧 jks（`android-app/_backup/`）仅用于「万一需要回装 v1.4 及以前」，不再用于出新版本。
+- **★ 用户须知**：装着 ≤v1.4（旧证书）的手机**装不了 v1.5**（同包名 + 换证书被系统拒绝）→ 先卸载旧 App 再装 v1.5。卸载会清 localStorage（学习进度/错题本/同步码全没）→ **装前先导出同步码**。备份的旧 jks（`android-app/_backup/c100-release-OLD-leaked.jks`，证书 `1f403ca6…`）**不是高数的了**——高数从 v1.5 起只认新证书；这份旧 jks **是「一百件小事」App 在役的签名密钥**（两项目早期共用同一 jks），**保留、勿删**，「一百件小事」继续出包/覆盖升级全靠它。
 
 ## 五点十、目录合并：删 `gaoshu-app/`，只留 `android-app/`（2026-11-06）
 - 删除仓库外 `D:\小玩具\gaoshu-app\`，并入 `gaoshu/android-app/`：jks（新密钥）+ `dist/` 6 个已出 APK + `_backup/c100-release-OLD-leaked.jks` 全部到位；`_chk/`（含 2KB 旧占位图）属临时垃圾，**未并入、已删**。
@@ -150,8 +150,8 @@ bash build.sh <vc> <ver>        # 例：bash build.sh 6 1.5（同时 manifest �
 - 文档里残留的 `gaoshu-app` 字样均为「五点八/五点九」的历史事件记录（当时真源确实在那里），已在对应节加了当前指向注。
 
 ## 七、已知风险（接手必读）
-- ~~git 历史里有过一次签名密码明文~~ → **已用密钥轮换化解**（2026-11-06，见「五点九」）：旧密钥对作废，泄露的旧密码不再能签新包。历史 commit 里仍可见旧明文密码，但因密钥已换，它已无利用价值（拿不到新密钥 + 新密码就无法伪造 v1.5+ 的包）。**未做 git 洗史**（旧密码 + 旧证书均已失效，洗史收益低且有改 hash 风险，暂不处理；如后续要上 Play Store 再评估）。
-- `android-app/_backup/c100-release-OLD-leaked.jks` 与 `c100-release.jks` 都在 gitignore 外、仅存本机：**旧 jks 仅用于回装 ≤v1.4**；**新 jks 是唯一出包密钥，本机丢了就得重来（v1.5+ 全部要重签、手机重装）**——建议自行备份一份到非本机的地方（U 盘/加密网盘）。
+- ~~git 历史里有过一次签名密码明文~~ → **已用密钥轮换化解**（2026-11-06，见「五点九」）：高数从 v1.5 起换新证书，泄露的旧密码**无法再签高数 v1.5+ 的包**。历史 commit 里仍可见旧明文密码，但因高数密钥已换、它签不了高数新版本（旧证书 `1f403ca6…` 仍活着的唯一原因是它还是「一百件小事」的在役密钥，与高数安全无关）。**未做 git 洗史**（旧密码 + 旧证书均已失效，洗史收益低且有改 hash 风险，暂不处理；如后续要上 Play Store 再评估）。
+- `android-app/_backup/c100-release-OLD-leaked.jks`（旧证书 `1f403ca6…`）与 `c100-release.jks`（新证书 `71fa1c68…`）都在 gitignore 外、仅存本机：**旧 jks 是「一百件小事」App 的在役签名密钥，保留勿删**；**新 jks 是高数 v1.5+ 的唯一出包密钥，本机丢了就得重来（v1.5+ 全部要重签、手机重装）**——建议两份都备份到非本机的地方（U 盘/加密网盘）。
 - aapt2 参数 `--version-code` 写进 build.sh 但**实际无效**（manifest 赢），别被脚本参数骗到。
 
 ## 六、待办 / 可选改进

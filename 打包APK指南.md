@@ -12,7 +12,7 @@ zipalign → apksigner）一条命令出包。壳（WebView）加载的是**在�
 
 - `D:\androidtools\`：JDK17（`jdk/`）+ build-tools（`bt/`：aapt2/d8/zipalign/apksigner）+ `android.jar`（platform-35）
 - `gaoshu/android-app/c100-release.jks`：签名密钥（`.gitignore` 排除 `*.jks`，不进公开仓库）
-- **★ 2026-11-06 已轮换密钥**：旧密钥对（密码曾明文进过 git 历史）已作废，备份在 `gaoshu/android-app/_backup/c100-release-OLD-leaked.jks`。现为**新证书**，SHA-256 = `71fa1c68ac4b87b48259dad3562c29d604f36857536a80b28c4a07d55d993809`。
+- **★ 2026-11-06 已轮换高数的密钥**：高数现为**新证书**，SHA-256 = `71fa1c68ac4b87b48259dad3562c29d604f36857536a80b28c4a07d55d993809`。旧密钥（证书 `1f403ca6…`）备份在 `gaoshu/android-app/_backup/c100-release-OLD-leaked.jks`——**它没作废，仍是「一百件小事」App 的在役签名密钥，保留勿删**（与高数各签各的，互不影响）。
 - 构建要 `export KSPASS='你的密钥密码'`（密钥密码只放本机环境变量，**绝不写进任何进 git 的文件**；新密码正文不在此文档写明，本机已 export）
 - **★ 换证书后果**：装着 ≤v1.4（旧证书）的手机**装不了 v1.5**（同包名 + 换证书被系统拒绝）→ 先卸载旧 App 再装 v1.5。卸载清 localStorage → **装前先导出同步码**。
 
