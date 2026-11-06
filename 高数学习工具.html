@@ -5652,7 +5652,7 @@ window.CHAPOS.push({
     return s;
   }
   function chaps(){ return window.CHAPOS || []; }
-  function chap(no){ var cs=chaps(); for(var i=0;i<cs.length;i++){ if(cs[i].no===no) return cs[i]; } return null; }
+  function chap(no){ var n=String(no); var cs=chaps(); for(var i=0;i<cs.length;i++){ if(String(cs[i].no)===n) return cs[i]; } return null; }
   function secOf(no,si){ var c=chap(no); return (c&&c.sections)? c.sections[si] : null; }
   function ckKey(no,si,id){ return no+"_"+si+"_"+id; }
   function wKey(no,si,pi){ return no+"_"+si+"_"+pi; }
@@ -6432,7 +6432,8 @@ window.CHAPOS.push({
     for(i=0;i<(c.sections||[]).length;i++){ if(c.sections[i].idx === idxStr) break; }
     if(i >= (c.sections||[]).length) i = 0;
     pushNav();
-    view.ch = no; view.page="section"; view.si=i; view.tab="learn"; view.tool=null;
+    /* view.ch 存章节数据自身的 no（字符串），与 chap()/侧栏高亮/查表用的类型保持一致 */
+    view.ch = c.no; view.page="section"; view.si=i; view.tab="learn"; view.tool=null;
     saveView(); closePop(); render(); window.scrollTo(0,0);
   }
 

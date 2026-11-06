@@ -40,7 +40,7 @@ gaoshu/
 `dist/`（顶层构建目录）、`_py.tgz`、`package/`、`_test_speed.js`。
 
 ## 三、关键约定与红线
-- **缓存版本**：`index.html` 里所有 `?v=N` 统一为当前 `v29`。改动任何前端文件后**必须升版**并同步到所有 15 个引用行。
+- **缓存版本**：`index.html` 里所有 `?v=N` 统一为当前 `v30`。改动任何前端文件后**必须升版**并同步到所有 15 个引用行。
 - **构建确定性**：`node 构建单文件版.js` 输出字节级可重复（`test_metrics.py` 风格验证过）。
 - **★ 真实出包通道 = 仓库内 `gaoshu/android-app/`（唯一真源）**。早期出包用仓库外 `gaoshu-app/`（v1.4 翻车就出在这套没跟仓库同步），2026-11-06 已删除 `gaoshu-app/`、把 jks/dist/旧密钥备份全并入 `android-app/`，从此**一套文件夹、且在 git 里**（jks 被 gitignore 排除、dist 产物不入库）。
   - 出包命令：`cd D:/小玩具/gaoshu/android-app && export KSPASS='你的密钥密码' && bash build.sh 6 1.5`。产物 `android-app/dist/`。
@@ -113,11 +113,11 @@ bash build.sh <vc> <ver>        # 例：bash build.sh 6 1.5（同时 manifest �
 | 项 | 当前事实 | 核验方式 |
 |---|---|---|
 | git | main 干净，远程 `Yucua/gaoshu-learning-tool`（GitHub） | `git status / remote -v` |
-| 缓存版本 | **v29**：index.html 15 处 + 构建脚本 15 处全一致 | `grep -c '?v=29'` = 15/15 |
+| 缓存版本 | **v30**：index.html 15 处 + 构建脚本 15 处全一致 | `grep -c '?v=30'` = 15/15 |
 | 构建 | `node 构建单文件版.js` 输出**字节级可重复**（重建 diff 为空） | `cmp` 前后产物 |
 | 章节 | `node 检查章节范围.js` 12/12 通过 | 直接跑 |
 | 单文件产物 | `高数学习工具.html` ≈ 1017KB，git 跟踪，双击即用 | `ls -la` |
-| 线上 | `https://gaoshu-09255.app.workbuddy.host/?sharecode=JIU2U3JLZU`，已发 **v29**（2026-11-06 重新发布，curl 实测 15 个 ?v=29，含术语卡去劝退版）；APK 壳带 `clearCache(true)`，手机刷新即生效，无需重装 | `curl … \| grep -oE '\?v=[0-9]+'` |
+| 线上 | `https://gaoshu-09255.app.workbuddy.host/?sharecode=JIU2U3JLZU`，已发 **v29**；本地前端已改到 **v30**（2026-11-06 修「去完整讲解」跨章不跳，见「五点十一」），**尚未重新发布**，手机刷新暂是 v29（跳转 bug 仍在） | `curl … \| grep -oE '\?v=[0-9]+'` |
 | 出包真源 | **仓库内 `gaoshu/android-app/`（唯一）**：build.sh/manifest/jks/dist/旧密钥备份全在此；外部 `gaoshu-app/` 已于 2026-11-06 删除并入。jks、dist 被 gitignore（不进公开仓库），源码进 git | `ls gaoshu/android-app` |
 | 最新 APK | `gaoshu/android-app/dist/高数学习工具-v1.5.apk`（vc=6，16853B，**新证书**） | `aapt2 dump badging` |
 | 签名 | **★ 2026-11-06 已轮换**：新 jks（`android-app/c100-release.jks`）新证书 SHA-256 `71fa1c68…`（v1.5 起）。旧证书 `1f403ca6…`（v1.0~v1.4）已作废，旧泄露 jks 备份在 `android-app/_backup/` | `apksigner verify` |
@@ -148,6 +148,13 @@ bash build.sh <vc> <ver>        # 例：bash build.sh 6 1.5（同时 manifest �
 - 合并后**实测 `android-app/` 独立 `bash build.sh 6 1.5` 出包成功**（签名 `71fa1c68…`，BUILD_OK → `android-app/dist/`），证明它已是自足真源。
 - 现状：全项目只有**一套 APK 源**（`gaoshu/android-app/`，在 git 里）；jks 与 dist 被 `.gitignore` 排除不进公开仓库。出包命令改为 `cd D:/小玩具/gaoshu/android-app && bash build.sh 6 1.5`。
 - 文档里残留的 `gaoshu-app` 字样均为「五点八/五点九」的历史事件记录（当时真源确实在那里），已在对应节加了当前指向注。
+
+## 五点十一、修「去完整讲解」跨章不跳的真根因（v29→v30，2026-11-06）
+- **现象**：五点七修 `jumpSec` 让它跨章找节后，用户实测点「去「4.2」看完整讲解」仍不跳、弹层也不关。
+- **真根因（类型失配）**：章节数据里 `no` 是**字符串**（`no:'4'`），`chap(no)` 用严格相等 `cs[i].no===no` 比对；而 `jumpSec` 用 `parseInt` 解析出**数字** 4 传给 `gotoSec` → `chap(4)` 里 `"4"===4` 为 false → 静默 `return`，页面纹丝不动。五点七只改了"找哪一章"，没发现 `chap()` 的严格相等被数字坑了。
+- **修法（两处）**：① `chap(no)` 改 `String(cs[i].no)===String(no)`，字符串/数字都能匹配；② `gotoSec` 里 `view.ch = c.no`（存回章节对象自身的字符串 no），避免跳转后侧栏高亮 / `secStat` 查表再次因数字≠字符串失配。
+- **验证（Edge 横屏实跑）**：人在第 5 章点正文「不定积分」(sec 4.1) → 弹层关、页面跳到 4.1、`#main .ix`=4.1，0 报错；跨章跳转坐实可用。
+- 升版 v30（15+15 处 `?v=`），单文件版重建。
 
 ## 七、已知风险（接手必读）
 - ~~git 历史里有过一次签名密码明文~~ → **已用密钥轮换化解**（2026-11-06，见「五点九」）：高数从 v1.5 起换新证书，泄露的旧密码**无法再签高数 v1.5+ 的包**。历史 commit 里仍可见旧明文密码，但因高数密钥已换、它签不了高数新版本（旧证书 `1f403ca6…` 仍活着的唯一原因是它还是「一百件小事」的在役密钥，与高数安全无关）。**未做 git 洗史**（旧密码 + 旧证书均已失效，洗史收益低且有改 hash 风险，暂不处理；如后续要上 Play Store 再评估）。
