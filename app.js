@@ -754,22 +754,16 @@
     for(var i=0;i<all.length;i++){ if(all[i].id===id){ g=all[i]; break; } }
     if(!g || !pop) return;
     popOpenFor = id;
-    var ch = curCh();
     var h = '<div class="pop-h"><b>'+esc(g.name)+'</b><button class="pop-x" data-popclose aria-label="关闭">×</button></div><div class="pop-b">';
-    if((g.intro||1) > ch){
-      h += '<div class="pop-warn">这个概念要学到 <b>第 '+g.intro+' 章</b> 才讲。现在先不用管它，把这一章练熟就够了。</div>';
-      h += '<div class="pop-sec"><span class="k">先记一句</span><p>'+md(g.one)+'</p></div>';
-    } else {
-      h += '<div class="pop-sec"><span class="k">一句话</span><p>'+md(g.one)+'</p></div>';
-      h += '<div class="pop-sec"><span class="k">打个比方</span><p>'+md(g.ana)+'</p></div>';
-      if(g.ex){
-        h += '<div class="pop-sec"><span class="k">最小例子</span><p>'+md(g.ex.stem)+'</p>';
-        if(g.ex.steps && g.ex.steps.length) h += '<ol>'+g.ex.steps.map(function(s){return '<li>'+md(s)+'</li>';}).join("")+'</ol>';
-        h += '</div>';
-      }
-      h += '<div class="pop-sec"><span class="k">卡住点</span><p>'+md(g.pit)+'</p></div>';
-      if(g.sec) h += '<span class="pop-go" data-gosec="'+g.sec+'">去「'+g.sec+'」看完整讲解 →</span>';
+    h += '<div class="pop-sec"><span class="k">一句话</span><p>'+md(g.one)+'</p></div>';
+    h += '<div class="pop-sec"><span class="k">打个比方</span><p>'+md(g.ana)+'</p></div>';
+    if(g.ex){
+      h += '<div class="pop-sec"><span class="k">最小例子</span><p>'+md(g.ex.stem)+'</p>';
+      if(g.ex.steps && g.ex.steps.length) h += '<ol>'+g.ex.steps.map(function(s){return '<li>'+md(s)+'</li>';}).join("")+'</ol>';
+      h += '</div>';
     }
+    h += '<div class="pop-sec"><span class="k">卡住点</span><p>'+md(g.pit)+'</p></div>';
+    if(g.sec) h += '<span class="pop-go" data-gosec="'+g.sec+'">去「'+g.sec+'」看完整讲解 →</span>';
     h += '</div>';
     pop.innerHTML = h;
     pop.classList.add("on");

@@ -40,7 +40,7 @@ gaoshu/
 `dist/`（顶层构建目录）、`_py.tgz`、`package/`、`_test_speed.js`。
 
 ## 三、关键约定与红线
-- **缓存版本**：`index.html` 里所有 `?v=N` 统一为当前 `v28`。改动任何前端文件后**必须升版**并同步到所有 15 个引用行。
+- **缓存版本**：`index.html` 里所有 `?v=N` 统一为当前 `v29`。改动任何前端文件后**必须升版**并同步到所有 15 个引用行。
 - **构建确定性**：`node 构建单文件版.js` 输出字节级可重复（`test_metrics.py` 风格验证过）。
 - **★ 真实出包通道 = 仓库内 `gaoshu/android-app/`（唯一真源）**。早期出包用仓库外 `gaoshu-app/`（v1.4 翻车就出在这套没跟仓库同步），2026-11-06 已删除 `gaoshu-app/`、把 jks/dist/旧密钥备份全并入 `android-app/`，从此**一套文件夹、且在 git 里**（jks 被 gitignore 排除、dist 产物不入库）。
   - 出包命令：`cd D:/小玩具/gaoshu/android-app && export KSPASS='你的密钥密码' && bash build.sh 6 1.5`。产物 `android-app/dist/`。
@@ -113,11 +113,11 @@ bash build.sh <vc> <ver>        # 例：bash build.sh 6 1.5（同时 manifest �
 | 项 | 当前事实 | 核验方式 |
 |---|---|---|
 | git | main 干净，远程 `Yucua/gaoshu-learning-tool`（GitHub） | `git status / remote -v` |
-| 缓存版本 | **v28**：index.html 15 处 + 构建脚本 15 处全一致 | `grep -c '?v=28'` = 15/15 |
+| 缓存版本 | **v29**：index.html 15 处 + 构建脚本 15 处全一致 | `grep -c '?v=29'` = 15/15 |
 | 构建 | `node 构建单文件版.js` 输出**字节级可重复**（重建 diff 为空） | `cmp` 前后产物 |
 | 章节 | `node 检查章节范围.js` 12/12 通过 | 直接跑 |
 | 单文件产物 | `高数学习工具.html` ≈ 1017KB，git 跟踪，双击即用 | `ls -la` |
-| 线上 | `https://gaoshu-09255.app.workbuddy.host/?sharecode=JIU2U3JLZU`，已发 **v28**（curl 实测 15 个 ?v=28） | `curl … \| grep -oE '\?v=[0-9]+'` |
+| 线上 | `https://gaoshu-09255.app.workbuddy.host/?sharecode=JIU2U3JLZU`，已发 **v28**；本地前端已改到 **v29**（2026-11-06 术语卡去劝退版），**尚未重新发布**，APK/手机刷新暂时还是 v28 旧行为 | `curl … \| grep -oE '\?v=[0-9]+'` |
 | 出包真源 | **仓库内 `gaoshu/android-app/`（唯一）**：build.sh/manifest/jks/dist/旧密钥备份全在此；外部 `gaoshu-app/` 已于 2026-11-06 删除并入。jks、dist 被 gitignore（不进公开仓库），源码进 git | `ls gaoshu/android-app` |
 | 最新 APK | `gaoshu/android-app/dist/高数学习工具-v1.5.apk`（vc=6，16853B，**新证书**） | `aapt2 dump badging` |
 | 签名 | **★ 2026-11-06 已轮换**：新 jks（`android-app/c100-release.jks`）新证书 SHA-256 `71fa1c68…`（v1.5 起）。旧证书 `1f403ca6…`（v1.0~v1.4）已作废，旧泄露 jks 备份在 `android-app/_backup/` | `apksigner verify` |
