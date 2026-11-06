@@ -117,7 +117,7 @@ bash build.sh <vc> <ver>        # 例：bash build.sh 6 1.5（同时 manifest �
 | 构建 | `node 构建单文件版.js` 输出**字节级可重复**（重建 diff 为空） | `cmp` 前后产物 |
 | 章节 | `node 检查章节范围.js` 12/12 通过 | 直接跑 |
 | 单文件产物 | `高数学习工具.html` ≈ 1017KB，git 跟踪，双击即用 | `ls -la` |
-| 线上 | `https://gaoshu-09255.app.workbuddy.host/?sharecode=JIU2U3JLZU`，已发 **v29**；本地前端已改到 **v30**（2026-11-06 修「去完整讲解」跨章不跳，见「五点十一」），**尚未重新发布**，手机刷新暂是 v29（跳转 bug 仍在） | `curl … \| grep -oE '\?v=[0-9]+'` |
+| 线上 | `https://gaoshu-09255.app.workbuddy.host/?sharecode=JIU2U3JLZU`，已发 **v30**（2026-11-06 重新发布，curl 实测 15 个 ?v=30、app.js 含 `String(cs[i].no)`+`view.ch=c.no` 两处修复特征）；APK 壳带 `clearCache(true)`，手机刷新即生效、跳转 bug 已修好，无需重装 | `curl … \| grep -oE '\?v=[0-9]+'` |
 | 出包真源 | **仓库内 `gaoshu/android-app/`（唯一）**：build.sh/manifest/jks/dist/旧密钥备份全在此；外部 `gaoshu-app/` 已于 2026-11-06 删除并入。jks、dist 被 gitignore（不进公开仓库），源码进 git | `ls gaoshu/android-app` |
 | 最新 APK | `gaoshu/android-app/dist/高数学习工具-v1.5.apk`（vc=6，16853B，**新证书**） | `aapt2 dump badging` |
 | 签名 | **★ 2026-11-06 已轮换**：新 jks（`android-app/c100-release.jks`）新证书 SHA-256 `71fa1c68…`（v1.5 起）。旧证书 `1f403ca6…`（v1.0~v1.4）已作废，旧泄露 jks 备份在 `android-app/_backup/` | `apksigner verify` |
