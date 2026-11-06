@@ -4,15 +4,15 @@
 zipalign → apksigner）一条命令出包。壳（WebView）加载的是**在线地址**，
 改网页内容后只需重新发布在线版，App 端无需重装；**只有壳代码/图标/版本号变了才需要重新出包**。
 
-> **★ 真源在仓库外：`D:\小玩具\gaoshu-app\`（v1.0~v1.5 全在这里）。**
-> 仓库里的 `gaoshu/android-app/` 是同步副本（2026-11-06 已对齐），仅作 git 备份，**出包请用 gaoshu-app**。
-> 在 `gaoshu-app/` 改完壳代码/图标/manifest 后，记得把改动复制回仓库 `android-app/` 留档（`cp`：MainActivity.java、icon.png、AndroidManifest.xml，另加 build.sh 与 c100-release.jks 两处保持一致），然后 `git add`（jks 被 gitignore，不会真入库）。
+> **★ 唯一出包真源在仓库内：`D:\小玩具\gaoshu\android-app\`（v1.0~v1.5 全在其 dist/）。**
+> 早期曾用仓库外 `gaoshu-app/`（v1.4 翻车就出在这套没跟仓库同步）；**2026-11-06 已删除 `gaoshu-app/`、把 jks/dist/旧密钥备份全并入 `android-app/`**，从此一套文件夹、且在 git 里。
+> 改完壳代码/图标/manifest 直接 `git add` 提交即可（jks、dist 被 `.gitignore` 排除，不会真进公开仓库；`_backup/` 里的旧泄露 jks 同理）。
 
 ## 一、本机依赖（私有，不进仓库）
 
 - `D:\androidtools\`：JDK17（`jdk/`）+ build-tools（`bt/`：aapt2/d8/zipalign/apksigner）+ `android.jar`（platform-35）
-- `gaoshu-app/c100-release.jks`：签名密钥（两处 jks 的 md5 必须一致；`.gitignore` 排除 `*.jks`）
-- **★ 2026-11-06 已轮换密钥**：旧密钥对（密码曾明文进过 git 历史）已作废，备份在 `gaoshu-app/_backup/c100-release-OLD-leaked.jks`。现为**新证书**，SHA-256 = `71fa1c68ac4b87b48259dad3562c29d604f36857536a80b28c4a07d55d993809`。
+- `gaoshu/android-app/c100-release.jks`：签名密钥（`.gitignore` 排除 `*.jks`，不进公开仓库）
+- **★ 2026-11-06 已轮换密钥**：旧密钥对（密码曾明文进过 git 历史）已作废，备份在 `gaoshu/android-app/_backup/c100-release-OLD-leaked.jks`。现为**新证书**，SHA-256 = `71fa1c68ac4b87b48259dad3562c29d604f36857536a80b28c4a07d55d993809`。
 - 构建要 `export KSPASS='你的密钥密码'`（密钥密码只放本机环境变量，**绝不写进任何进 git 的文件**；新密码正文不在此文档写明，本机已 export）
 - **★ 换证书后果**：装着 ≤v1.4（旧证书）的手机**装不了 v1.5**（同包名 + 换证书被系统拒绝）→ 先卸载旧 App 再装 v1.5。卸载清 localStorage → **装前先导出同步码**。
 
@@ -21,7 +21,7 @@ zipalign → apksigner）一条命令出包。壳（WebView）加载的是**在�
 在 Git Bash 里：
 
 ```bash
-cd D:/小玩具/gaoshu-app
+cd D:/小玩具/gaoshu/android-app
 export KSPASS='你的密钥密码'        # PowerShell 用 $env:KSPASS='...'
 ```
 
@@ -36,7 +36,7 @@ export KSPASS='你的密钥密码'        # PowerShell 用 $env:KSPASS='...'
 bash build.sh 6 1.5
 ```
 
-产出在 `gaoshu-app/dist/高数学习工具-v1.5.apk`。
+产出在 `gaoshu/android-app/dist/高数学习工具-v1.5.apk`。
 
 **出包后自检三件套**：
 1. 体积：新图 v1.4/v1.5 约 16.8KB；若突然 37KB → 图标用了旧占位图，检查 `res/drawable/icon.png`。
