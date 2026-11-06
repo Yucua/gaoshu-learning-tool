@@ -42,15 +42,18 @@ gaoshu/
 ## 三、关键约定与红线
 - **缓存版本**：`index.html` 里所有 `?v=N` 统一为当前 `v28`。改动任何前端文件后**必须升版**并同步到所有 15 个引用行。
 - **构建确定性**：`node 构建单文件版.js` 输出字节级可重复（`test_metrics.py` 风格验证过）。
-- **★ 真实出包通道 = 仓库外 `D:\小玩具\gaoshu-app\`**（v1.0~v1.4 都在这；build.sh 与仓库 `android-app/` 同源，但仓库那套 2026-11-06 前是旧源——旧占位图标、壳缺系统栏桥，**出包别用它**，现已同步一致）。
-  - 出包命令：`cd D:/小玩具/gaoshu-app && export KSPASS='你的密钥密码' && bash build.sh 5 1.4`。产物 `gaoshu-app/dist/`。
-  - **★ 版本号机制（2026-11-06 实测推翻旧说法）**：aapt2 里 **manifest 赢，命令行参数无效**。`build.sh` 第 23-26 行虽把 `--version-code` 传给 aapt2，但 manifest 的 `android:versionCode` 存在时**以 manifest 为准**（把 manifest 写 99、命令行传 5，实测产出 versionCode=99）。所以改版本号**必须改 manifest 的 versionCode/versionName**，命令行那俩参数形同虚设、改不改都行。当前 manifest = `5 / 1.4`。
+- **★ 真实出包通道 = 仓库外 `D:\小玩具\gaoshu-app\`**（v1.0~v1.5 都在这；build.sh 与仓库 `android-app/` 同源，但仓库那套 2026-11-06 前是旧源——旧占位图标、壳缺系统栏桥，**出包别用它**，现已同步一致）。
+  - 出包命令：`cd D:/小玩具/gaoshu-app && export KSPASS='你的密钥密码' && bash build.sh 6 1.5`。产物 `gaoshu-app/dist/`。
+  - **★ 版本号机制（2026-11-06 实测推翻旧说法）**：aapt2 里 **manifest 赢，命令行参数无效**。`build.sh` 第 23-26 行虽把 `--version-code` 传给 aapt2，但 manifest 的 `android:versionCode` 存在时**以 manifest 为准**（把 manifest 写 99、命令行传 5，实测产出 versionCode=99）。所以改版本号**必须改 manifest 的 versionCode/versionName**，命令行那俩参数形同虚设、改不改都行。当前 manifest = `6 / 1.5`。
 - **APK 壳特性**：
   - 加载**在线地址**（`HOME_URL`），联网即用，改内容不需重装 App。
   - 加载前 `web.clearCache(true)`：强制重抓线上最新 index.html，避免手机 WebView 缓存旧版顶不掉（**只清 HTTP 缓存，不动 localStorage，学习进度/错题本/同步码数据不受影响**）。2026-11-06 v1.4 加入。
   - JS 桥 `AndroidTheme.setBarColor(color)` 传当前主题 `--bg` 实际色值，原生按亮度决定浅色/深色状态栏图标 → 系统栏跟随主题。
   - 桌面图标：数学 lim + 右箭头（`res/drawable/icon.png`，192×192 RGB 满铺 4296B；旧「100件小事」占位图 22KB 已弃用，仓库 `android-app` 曾误留旧图，2026-11-06 已同步纠正）。
-- **签名密钥**：与「一百件小事」同源（`c100-release.jks`），`versionCode` 保持递增即可覆盖升级。
+- **签名密钥**：`c100-release.jks`（gitignore 排除，不进仓库）。
+  - **★ 2026-11-06 已轮换密钥**：旧密钥（密码曾明文进过 git 历史、现已公开仓库）已作废，新密钥密码只放本机环境变量 KSPASS。新证书 SHA-256 = `71fa1c68ac4b87b48259dad3562c29d604f36857536a80b28c4a07d55d993809`。
+  - **★ 换证书后果**：装着旧 App（v1.4 及以前，旧证书 `1f403ca6…`）的手机**装不了 v1.5**（同包名 + 证书变更被系统拒绝）→ 必须先卸载旧 App 再装 v1.5。卸载会清 localStorage（学习进度/错题本/同步码全没）→ **装前先导出同步码**。
+  - 同证书内 `versionCode` 保持递增即可覆盖升级（v1.5→v1.6 等不需卸载）。
 
 ## 四、数据流
 - **进度**：`localStorage.gaoshu_check_v3`（checks：0不会/1半懂/2会）、`gaoshu_wrong_v3`（wrong：布尔）
@@ -115,13 +118,14 @@ bash build.sh <vc> <ver>        # 例：bash build.sh 6 1.5（同时 manifest �
 | 章节 | `node 检查章节范围.js` 12/12 通过 | 直接跑 |
 | 单文件产物 | `高数学习工具.html` ≈ 1017KB，git 跟踪，双击即用 | `ls -la` |
 | 线上 | `https://gaoshu-09255.app.workbuddy.host/?sharecode=JIU2U3JLZU`，已发 **v28**（curl 实测 15 个 ?v=28） | `curl … \| grep -oE '\?v=[0-9]+'` |
-| 出包真源 | **仓库外 `D:\小玩具\gaoshu-app\`**（v1.0~v1.4 全在其 dist/）；仓库 `gaoshu/android-app/` 已同步为一致副本，**只认 gaoshu-app** | 6 个源文件 `cmp` 全一致 + jks md5 同一 |
-| 最新 APK | `gaoshu-app/dist/高数学习工具-v1.4.apk`（vc=5，16852B） | `aapt2 dump badging` |
-| 签名 | jks 两处 md5 一致（同源）；v1.3/v1.4 SHA-256 `1f403ca6…` 一致可覆盖安装 | `md5sum` + `apksigner verify` |
+| 出包真源 | **仓库外 `D:\小玩具\gaoshu-app\`**（v1.0~v1.5 全在其 dist/）；仓库 `gaoshu/android-app/` 已同步为一致副本，**只认 gaoshu-app** | 6 个源文件 `cmp` 全一致 + jks md5 同一 |
+| 最新 APK | `gaoshu-app/dist/高数学习工具-v1.5.apk`（vc=6，16853B，**新证书**） | `aapt2 dump badging` |
+| 签名 | **★ 2026-11-06 已轮换**：新 jks 两处 md5 一致；新证书 SHA-256 `71fa1c68…`（v1.5 起）。旧证书 `1f403ca6…`（v1.0~v1.4）已作废 | `apksigner verify` |
 | 图标 | lim+箭头新图 4296B（md5 `256dbd…`），两处一致；旧占位图 22KB 已全清 | `md5sum` |
 | 壳特性 | 系统栏桥 `setBarColor`/`setTheme` + 启动 `clearCache(true)`（v1.4 加入） | `grep clearCache` = 1 |
 | 版本号机制 | **aapt2 以 manifest 为准，命令行参数无效**（manifest=99 命令行=5 → 实测产出 99） | 临时副本实测 |
-| 安全 | 签名密码已从 HANDOFF/build.sh 注释清除（历史 commit 里仍有过一次明文，见「七、已知风险」） | 对仓库跑 `grep -rn "你的密钥密码本体"` 应 = 0（本文档不写明文，避免再扩散） |
+| 换证书后果 | 装旧 App（≤v1.4 旧证书）的手机**装不了 v1.5**（同包名+换证书被拒）→ 先卸载旧 App 再装 v1.5；卸载清 localStorage → **装前先导出同步码** | 系统行为 |
+| 安全 | 旧签名密码曾明文进过 git 历史（见「七、已知风险」），已轮换密钥使其作废；新密码只放本机环境变量 KSPASS，文档不写明文 | 对仓库跑 `grep -rn "旧密码本体"` 应 = 0 |
 
 ## 五点八、v1.4 出包 + 文档全量审计（2026-11-06）
 - 在**真源 `gaoshu-app/`** 出 v1.4（vc 5）：壳加 `clearCache(true)`（只清 HTTP 缓存、不动 localStorage），修「线上发新版但手机缓存旧版顶不掉」。
@@ -130,8 +134,16 @@ bash build.sh <vc> <ver>        # 例：bash build.sh 6 1.5（同时 manifest �
 - **清掉明文签名密码**：HANDOFF.md、两份 build.sh 注释里的签名密码全换占位符（文档本身不再写明文密码本体，避免再扩散；git 历史里曾存在一次，见「七、已知风险」）。
 - `打包APK指南.md` 整篇重写（原写的是仓库内 android-app 旧通道 + 错版本号机制）。
 
+## 五点九、v1.5 密钥轮换（2026-11-06）
+- 旧密钥对（`c100-release.jks`，密码曾明文进过 git 历史、公开仓库可见）→ **作废**，已备份到 `gaoshu-app/_backup/c100-release-OLD-leaked.jks`。
+- 生成新密钥对：`keytool -genkeypair -alias c100 -keyalg RSA -keysize 2048 -validity 10000 -keystore c100-release.jks -storetype PKCS12 -dname "CN=GaoshuTool, O=Yucua, C=CN"`。新密码只放本机环境变量 KSPASS（本机已 export，本文档与进 git 的文件均不写明文本体）。
+- 新证书 SHA-256 = `71fa1c68ac4b87b48259dad3562c29d604f36857536a80b28c4a07d55d993809`。
+- manifest 改到 `6 / 1.5`，重签出 `gaoshu-app/dist/高数学习工具-v1.5.apk`（vc=6，16853B，签名 SHA-256 与新证书一致，自检三件套全过）。
+- 同步仓库 `gaoshu/android-app/`：manifest + build.sh + jks（jks 仍 gitignore，不入库）。
+- **★ 用户须知**：装着 ≤v1.4（旧证书）的手机**装不了 v1.5**（同包名 + 换证书被系统拒绝）→ 先卸载旧 App 再装 v1.5。卸载会清 localStorage（学习进度/错题本/同步码全没）→ **装前先导出同步码**。此后备份的旧 jks 仅用于「万一需要回装 v1.4 及以前」，不再用于出新版本。
+
 ## 七、已知风险（接手必读）
-- **git 历史里有过一次签名密码明文**（`cefca5b` 之前的 HANDOFF.md，已清掉，仅历史 commit 可见）。jks 本体不在仓库，风险有限；若要彻底消除可对该仓库做 BFG/filter-branch 洗史 + 强制推送（会改 commit hash，慎做），或干脆换新密钥对重新签名出包。
+- ~~git 历史里有过一次签名密码明文~~ → **已用密钥轮换化解**（2026-11-06，见「五点九」）：旧密钥对作废，泄露的旧密码不再能签新包。历史 commit 里仍可见旧明文密码，但因密钥已换，它已无利用价值（拿不到新密钥 + 新密码就无法伪造 v1.5+ 的包）。**未做 git 洗史**（旧密码 + 旧证书均已失效，洗史收益低且有改 hash 风险，暂不处理；如后续要上 Play Store 再评估）。
 - `gaoshu-app/` 在仓库外、**不在 git 里**：jks/新图标/壳代码改动无版本记录。出包前改动务必在仓库 `android-app/` 留同步副本。
 - aapt2 参数 `--version-code` 写进 build.sh 但**实际无效**（manifest 赢），别被脚本参数骗到。
 

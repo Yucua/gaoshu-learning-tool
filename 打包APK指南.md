@@ -4,17 +4,19 @@
 zipalign → apksigner）一条命令出包。壳（WebView）加载的是**在线地址**，
 改网页内容后只需重新发布在线版，App 端无需重装；**只有壳代码/图标/版本号变了才需要重新出包**。
 
-> **★ 真源在仓库外：`D:\小玩具\gaoshu-app\`（v1.0~v1.4 全在这里）。**
+> **★ 真源在仓库外：`D:\小玩具\gaoshu-app\`（v1.0~v1.5 全在这里）。**
 > 仓库里的 `gaoshu/android-app/` 是同步副本（2026-11-06 已对齐），仅作 git 备份，**出包请用 gaoshu-app**。
-> 在 `gaoshu-app/` 改完壳代码/图标后，记得把改动复制回仓库 `android-app/` 留档（`cp` 三个文件：MainActivity.java、icon.png、AndroidManifest.xml），然后 `git add`。
+> 在 `gaoshu-app/` 改完壳代码/图标/manifest 后，记得把改动复制回仓库 `android-app/` 留档（`cp`：MainActivity.java、icon.png、AndroidManifest.xml，另加 build.sh 与 c100-release.jks 两处保持一致），然后 `git add`（jks 被 gitignore，不会真入库）。
 
 ## 一、本机依赖（私有，不进仓库）
 
 - `D:\androidtools\`：JDK17（`jdk/`）+ build-tools（`bt/`：aapt2/d8/zipalign/apksigner）+ `android.jar`（platform-35）
-- `gaoshu-app/c100-release.jks`：签名密钥（两处 jks 的 md5 必须一致——与「一百件小事」同源；`.gitignore` 排除 `*.jks`）
-- 构建要 `export KSPASS='你的密钥密码'`（密钥密码只放本机环境变量，**绝不写进任何进 git 的文件**）
+- `gaoshu-app/c100-release.jks`：签名密钥（两处 jks 的 md5 必须一致；`.gitignore` 排除 `*.jks`）
+- **★ 2026-11-06 已轮换密钥**：旧密钥对（密码曾明文进过 git 历史）已作废，备份在 `gaoshu-app/_backup/c100-release-OLD-leaked.jks`。现为**新证书**，SHA-256 = `71fa1c68ac4b87b48259dad3562c29d604f36857536a80b28c4a07d55d993809`。
+- 构建要 `export KSPASS='你的密钥密码'`（密钥密码只放本机环境变量，**绝不写进任何进 git 的文件**；新密码正文不在此文档写明，本机已 export）
+- **★ 换证书后果**：装着 ≤v1.4（旧证书）的手机**装不了 v1.5**（同包名 + 换证书被系统拒绝）→ 先卸载旧 App 再装 v1.5。卸载清 localStorage → **装前先导出同步码**。
 
-## 二、出 APK（当前已出到 versionCode 5 / v1.4）
+## 二、出 APK（当前已出到 versionCode 6 / v1.5，**新证书**）
 
 在 Git Bash 里：
 
@@ -37,9 +39,9 @@ bash build.sh 6 1.5
 产出在 `gaoshu-app/dist/高数学习工具-v1.5.apk`。
 
 **出包后自检三件套**：
-1. 体积：新图 v1.4 约 16.8KB；若突然 37KB → 图标用了旧占位图，检查 `res/drawable/icon.png`。
-2. 版本号：`"D:/androidtools/bt/aapt2.exe" dump badging dist/xxx.apk | grep versionCode`。
-3. 签名：`apksigner verify --print-certs` 的 SHA-256 必须 = `1f403ca6f13cb9612e22ab41ca0b0b05b56da017b5529324f6457e93efea41c8`（与 v1.0~v1.4 一致，否则覆盖安装会失败）。
+1. 体积：新图 v1.4/v1.5 约 16.8KB；若突然 37KB → 图标用了旧占位图，检查 `res/drawable/icon.png`。
+2. 版本号：`"D:/androidtools/bt/aapt2.exe" dump badging dist/xxx.apk | grep versionCode`（v1.5 应 = 6）。
+3. 签名：`apksigner verify --print-certs` 的 SHA-256 必须 = `71fa1c68ac4b87b48259dad3562c29d604f36857536a80b28c4a07d55d993809`（**v1.5 起，新证书**；旧证书 `1f403ca6…` 仅适用于 ≤v1.4，两者不可混装）。
 
 ## 三、壳代码特性（MainActivity.java）
 
